@@ -1,0 +1,313 @@
+import { ValidationContext, unique_key, validateValue } from './validation';
+
+export class ValidationArray {
+    constructor(structure) {
+        if (Array.isArray(structure))
+            this.complex = false;
+        else
+            this.complex = true;
+
+        this.structure = structure;
+    }
+
+    *[Symbol.iterator]() {
+        if (this.complex) {
+            for (let prop in this.structure)
+                yield this.structure[prop];
+        }
+        else {
+            for (let prop of this.structure)
+                yield prop;
+        }
+    }
+}
+
+class ArrayModel {
+    constructor(arrayStruct, context, items = []) {
+        this._elements = items.map(x => createArrayElement(x, arrayStruct, context));
+
+        Object.defineProperty(this, "structure", { get: function () { return arrayStruct; } });
+        Object.defineProperty(this, "context", { get: function () { return context; } });
+    }
+
+    *[Symbol.iterator]() {
+        for (let item of this._elements)
+            yield item;
+    }
+
+    pop() {
+        this.context.notify(false);
+        return this._elements.pop();
+    }
+    push(item) {
+        this._elements.push(createArrayElement(item, this.structure, this.context));
+        this.context.notify(false);
+    }
+    shift() {
+        this.context.notify(false);
+        return this._elements.shift();
+    }
+    unshift(...items) {
+        let elements = items.map(x => createArrayElement(x, this.structure, this.context));
+        this._elements.unshift(...elements);
+        this.context.notify(false);
+    }
+    splice(start, deleteCount, ...items) {
+        let elements = items && items.map(x => createArrayElement(x, this.structure, this.context));
+        this._elements.splice(start, deleteCount, ...elements);
+        this.context.notify(false);
+    }
+
+    set(index, item) {
+        this._elements[index] = createArrayElement(item, this.structure, this.context);
+        this.context.notify(false);
+    }
+    init(...items) {
+        if (this._elements.length)
+            this._elements.splice(0, this._elements.length);
+
+        this.unshift(...items);
+    }
+    toArray() {
+        let fn = (model) => {
+            if (!model) return model;
+
+            if (model.key && typeof model.key == "string") {
+                return model.value;
+            }
+
+            if (model instanceof ArrayModel) {
+                return model.toArray();
+            }
+            else {
+                let obj = {};
+                for (let prop of Object.getOwnPropertyNames(model))
+                    obj[prop] = fn(model[prop]);
+
+                return obj;
+            }
+        }
+
+        return this._elements.map(x => fn(x)) || [];
+    }
+}
+
+function createArrayModel(structValue, context, defaultArray) {
+    let model = new ArrayModel(structValue, context, defaultArray || []);
+
+    return new Proxy(model, {
+        get: function (obj, prop) {
+            if (prop == '_elements' || prop == 'structure' || prop == 'context' ||
+                prop == 'pop' || prop == 'push' || prop == 'shift' || prop == 'unshift' ||
+                prop == 'splice' || prop == 'set' || prop == 'init' || prop == 'toArray') return obj[prop];
+
+            const value = model._elements[prop];
+            if (typeof value == "function") return value.bind(obj._elements);
+
+            return value;
+        },
+
+        set: function (obj, prop, value) {
+            obj.set(prop, value);
+            return true;
+        },
+
+        deleteProperty(obj, prop) {
+            obj.splice(prop, 1);
+        }
+    });
+}
+
+function createArrayElement(item, arrayStruct, context) {
+    if (!arrayStruct.complex)
+        return createValueModel(arrayStruct.structure, context, item);
+
+    let model = {};
+    for (let prop in arrayStruct.structure)
+        processStructure(model, prop, arrayStruct.structure[prop], context, item);
+
+    return model;
+}
+
+function createValueModel(structValue, context, overrideDefault = undefined) {
+    const [defaultValue, ...rules] = structValue;
+    const key = unique_key();
+    let element = null, value = overrideDefault !== undefined ? overrideDefault : defaultValue;
+
+    const isDirty = () => context.results.find(x => x.key === key)?.dirty;
+
+    const obj = {
+        get key() { return key; },
+        get rules() { return rules; },
+        get dirty() { return isDirty(); },
+
+        get element() { return element; },
+        set element(el) {
+            element = el;
+
+            if (!el) context.removeResult(key, false);
+            else this.validate(false, false);
+        },
+
+        get value() { return value; },
+        set value(val) {
+            if (value == val) return;
+
+            value = val;
+            this.validate(true, true);
+        },
+
+        setValue(val) {
+            value = val;
+        },
+
+        validate: (dirty, immediate) => {
+            if (dirty === undefined) dirty = isDirty();
+
+            let errors = validateValue(value, rules);
+
+            if (element)
+                context.addResult({ key, errors, dirty }, immediate === undefined ? true : immediate);
+            else
+                context.removeResult(key, immediate === undefined ? true : immediate);
+
+            return !errors;
+        },
+
+        err: (rule, dirty, contextDirty = true) => {
+            if (contextDirty !== null && context.dirty !== contextDirty) return false;
+            return context.hasError(key, rule, dirty);
+        },
+        
+        message: (rule) =>{
+            return context.getMessage(key, rule);
+        }
+    };
+
+    obj.ref = el => { obj.element = el; };
+    return obj;
+}
+
+function processStructure(model, prop, structValue, context, defaultModel = undefined) {
+    let modelValue = model[prop];
+    let defaultValue = defaultModel ? defaultModel[prop] : undefined;
+
+    let type = 'object';
+    if (Array.isArray(structValue)) type = 'value';
+    else if (structValue instanceof ValidationArray) type = 'array';
+
+    if (modelValue === undefined) {
+        if (type == 'value') modelValue = createValueModel(structValue, context, defaultValue);
+        else if (type == 'array') modelValue = createArrayModel(structValue, context, defaultValue);
+        else modelValue = {};
+    }
+
+    Object.defineProperty(model, prop, {
+        get: function () { return modelValue; },
+        set: function (val) {
+            if (type == 'value') modelValue.value = val;
+            else if (type == 'array') modelValue.init(...val);
+            else throw new Error('Invalid Operation');
+        }
+    });
+
+    if (type == 'object') {
+        for (let p in structValue)
+            processStructure(modelValue, p, structValue[p], context, defaultValue);
+    }
+}
+
+export class ModelValidationContext extends ValidationContext {
+    constructor(structure) {
+        super();
+
+        const controls = {};
+        for (let prop in structure)
+            processStructure(controls, prop, structure[prop], this);
+
+        Object.freeze(controls);
+        Object.defineProperty(this, 'controls', { get: function () { return controls; } });
+    }
+
+    validate(leaveCustom) {
+        this.results = leaveCustom ? this.results.filter(x => x.custome) : [];
+        let fn = (model) => {
+            if (!model) return;
+
+            if (model.key && typeof model.key == "string" && model.validate) {
+                model.validate(undefined, false);
+                return;
+            }
+
+            if (model instanceof ArrayModel) {
+                for (let item of model)
+                    fn(item);
+            }
+            else {
+                for (let prop of Object.getOwnPropertyNames(model))
+                    fn(model[prop]);
+            }
+        }
+
+        fn(this.controls);
+        this.notify(true);
+
+        return this.isValid(leaveCustom);
+    }
+
+    get model() {
+        let model = {};
+
+        let fn = (model) => {
+            if (!model) return model;
+
+            if (model.key && typeof model.key == "string") {
+                return model.value;
+            }
+
+            if (model instanceof ArrayModel) {
+                return model.toArray();
+            }
+            else {
+                let obj = {};
+                for (let prop of Object.getOwnPropertyNames(model))
+                    obj[prop] = fn(model[prop]);
+
+                return obj;
+            }
+        }
+
+        for (let prop of Object.getOwnPropertyNames(this.controls))
+            model[prop] = fn(this.controls[prop]);
+
+        return model;
+    }
+
+    set model(value) {
+        let isValueType = model => model.key && typeof model.key == "string";
+
+        let fn = (model, value) => {
+            if (!model) return;
+
+            if (isValueType(model)) {
+                model.setValue(value);
+                return;
+            }
+
+            if (model instanceof ArrayModel) {
+                model.init(...(value || []));
+            }
+            else {
+                for (let prop of Object.getOwnPropertyNames(model))
+                    fn(model[prop], value && value[prop]);
+            }
+        }
+
+        for (let prop of Object.getOwnPropertyNames(this.controls)) {
+            fn(this.controls[prop], value && value[prop]);
+        }
+
+
+        this.validate();
+    }
+}
