@@ -9,6 +9,7 @@ export default class Select extends FormControl {
     render() {
         let props = this.getRenderProps();
         
-        return <select {...props} ref={el => { this.control = el; }} />;
+        props.ref = el => { this.control = el; };
+        return React.createElement('select', props);
     }
 }

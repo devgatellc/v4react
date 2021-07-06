@@ -10,6 +10,7 @@ export default class Input extends FormControl {
         let props = this.getRenderProps();
         if (!props.type) props.type = "text";
 
-        return <input {...props} ref={el => { this.control = el; }} />;
+        props.ref = el => { this.control = el; };
+        return React.createElement('input', props);
     }
 }

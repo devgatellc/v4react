@@ -8,7 +8,9 @@ export default class CheckBox extends FormControl {
 
     render() {
         let props = this.getRenderProps();
+        props.type = "checkbox";
         
-        return <input {...props} type="checkbox" ref={el => { this.control = el; }} />;
+        props.ref = el => { this.control = el; };
+        return React.createElement('input', props);
     }
 }

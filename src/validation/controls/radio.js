@@ -8,7 +8,9 @@ export default class Radio extends FormControl {
 
     render() {
         let props = this.getRenderProps();
+        props.type = "radio";
         
-        return <input {...props} type="radio" ref={el => { this.control = el; }} />;
+        props.ref = el => { this.control = el; };
+        return React.createElement('input', props);
     }
 }

@@ -67,10 +67,6 @@ export default class FieldValidation extends React.Component {
         }
         if (typeof message == "function") message = message();
 
-        return (
-            <div {...rest}>
-                {message}
-            </div>
-        );
+        return React.createElement('div', rest, message);
     }
 }
