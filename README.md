@@ -39,9 +39,14 @@ export default class TemplateValidation extends React.Component {
          <div>
             <Input type="text" name="control_name" value={this.state.value} 
                    onChange={e => { this.setState({ value: e.target.value }); }} validation={this.validation}
-                   rules={[{ name: "custom", validator: value => !value || value[0] === value[0].toUpperCase() }]} required />
-            <FieldValidation name="control_name" rule="required" validation={this.validation}>Required</FieldValidation>
-            <FieldValidation name="control_name" rule="custom" validation={this.validation}>Invalid</FieldValidation>
+                   rules={[{ name: "custom", validator: value => !value || value[0] === value[0].toUpperCase() }]}
+                   required />
+            <FieldValidation name="control_name" rule="required" validation={this.validation}>
+               value is required!
+            </FieldValidation>
+            <FieldValidation name="control_name" rule="custom" validation={this.validation}>
+               value is invalid
+            </FieldValidation>
          </div>
          <div>
            <button onClick={this.submit}>Submit</button>
@@ -50,3 +55,19 @@ export default class TemplateValidation extends React.Component {
      }
 }
 ```
+
+# ValidationContext
+Property | Type | Description | Options
+-------- | ---- | ----------- | -------
+dirty | Field | Is context dirty or pristine
+setDirty | Function | Set Context dirty | leavCustomErrors - removes custom errors if false. Default false 
+setPristine | Function | Set context pristine | leavCustomErrors - removes custom errors if false. Default false 
+addResult | Function | Add validation result | result - {key: string, dirty: boolean, custom: boolean, errors: [{name: string, message: string}]}
+removeResult | Function | Remove result | key - validation result key
+addError | Function | Add custom error | error - string or {key: string, message: string}
+removeError | Function | Remove custom error | key - custom error key
+removeCustomErrors | Function | Remove all custom errors
+getState | Function | Get state of specific result | key - string. returns {valid: boolean, dirty: boolean, errors: {[prop: string]: boolean}}
+getMessage | Function | Get message of specific result | key - string, optional rule - string
+hasError | Function | Get if specific result has error | key - string, optional rule - string, optional dirty - boolean
+isValid | Function | Is context valid | skipCustom - boolean skip custom error validation
