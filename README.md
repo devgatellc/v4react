@@ -10,7 +10,7 @@ Hook components approach defines validation methods which are easily used with r
 
 # Examples of usage
 ## Template driven validation
-```
+```javascript
 //import validation components
 import { createValidationContext, Input, CheckBox, Select, FieldValidation } from 'v4react';
 
@@ -32,7 +32,9 @@ export default class TemplateValidation extends React.Component {
        }
        
      render(){
-       //use v4react controls for validation. all html validation attributes supported. define custom validation attributes in rules prop.
+       //use v4react controls for validation. all html validation attributes supported. 
+       //define custom validation attributes in rules prop. 
+       //example: validate input on required and first letter to be uppercase
        return <React.Fragment>
          <div>
             <Input type="text" name="control_name" value={this.state.value} 
