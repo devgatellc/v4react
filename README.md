@@ -1,6 +1,6 @@
 # v4react
 Reactjs validation for both - class and hook components. In case of class components it can be used with two approaches:
-  * Template driven approach - uses custom components. Adding and managing new validation components are easy handled.
+  * Template driven approach - uses custom components. Adding and managing new validation components are easily handled.
   * Model driven approach - Validation model structure is being defined and used with plain html components.
 
 Hook components approach defines validation methods which are easily used with react hooks.
@@ -11,4 +11,40 @@ Hook components approach defines validation methods which are easily used with r
 # Examples of usage
 ## Template driven validation
 ```
+//import validation components
+import { createValidationContext, Input, CheckBox, Select, FieldValidation } from 'v4react';
+
+export default class TemplateValidation extends React.Component {
+   constructor(props) {
+           super(props);
+
+           this.state = {
+             value: ''
+           };
+
+           //create validation context
+           this.validation = createValidationContext();
+       }
+       
+       submit = () =>{
+         this.validation.setDirty();
+         console.log(this.validation.isValid());
+       }
+       
+     render(){
+       //use v4react controls for validation. all html validation attributes supported. define custom validation attributes in rules prop.
+       return <React.Fragment>
+         <div>
+            <Input type="text" name="control_name" value={this.state.value} 
+                   onChange={e => { this.setState({ value: e.target.value }); }} validation={this.validation}
+                   rules={[{ name: "custom", validator: value => !value || value[0] === value[0].toUpperCase() }]} required />
+            <FieldValidation name="control_name" rule="required" validation={this.validation}>Required</FieldValidation>
+            <FieldValidation name="control_name" rule="custom" validation={this.validation}>Invalid</FieldValidation>
+         </div>
+         <div>
+           <button onClick={this.submit}>Submit</button>
+         </div>
+       </React.Fragment>
+     }
+}
 ```
