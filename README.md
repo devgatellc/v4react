@@ -65,8 +65,8 @@ export default class ModelValidation extends React.Component {
            super(props);
 
            //create validation structure
-           this.validation = createValidationContext({
-             val: ['', 'required', {name: 'custom', validator: value=>!value || value[0] === value[0].toUpperCase()], //default value, validation rules
+           this.validation = createValidationContext({//default value, validation rules
+             val: ['', 'required', {name: 'custom', validator: value=>!value || value[0] === value[0].toUpperCase()}], 
              array: new ValidationArray({
                 id: [''],
                 val: ['', 'required']
@@ -92,7 +92,7 @@ export default class ModelValidation extends React.Component {
          </div>
          
          {
-           controls.arr.map(item=>(
+           controls.array.map(item=>(
             <div key={item.id.val}>
                <input type="text" ref={item.val.ref} className={item.val.err()? 'is-invalid' : ''}
                       value={item.val.value}  onChange={e => { item.val = e.target.value; }} />
@@ -106,6 +106,52 @@ export default class ModelValidation extends React.Component {
          </div>
        </React.Fragment>
      }
+}
+```
+
+## Hook validation
+```javascript
+import { useValidationContext, useValidation, useValidationArray } from 'v4react';
+
+export default function HookValidation() {
+    //create context
+    let context = useValidationContext();
+
+    //create validation value.
+    let [val, setVal, valCtr] = 
+       useValidation('', ['required', {name: 'custom', validator: value=>!value || value[0] === value[0].toUpperCase()}], context);
+       
+    //create validation array
+    let [array, setArray, arrayCtr] = 
+       useValidationArray([], item=> item.id, [{name: 'required', validator: item=> !!item.val}], context);
+             
+    const submit = () =>{
+      context.setDirty();
+      console.log(context.isValid());
+    }
+    
+    return <React.Fragment>
+         <div>
+            <input type="text" className={valCtr.err()? 'is-invalid' : ''}
+                    value={val}  onChange={e => { setVal(e.target.value); }} />
+            {valCtr.err('required') && <div>value is required!</div>}
+            {valCtr.err('custom') && <div>value is invalid!</div>}
+         </div>
+         
+         {
+           array.map((item, i)=>(
+            <div key={item.id}>
+               <input type="text" className={arrayCtr[i].err()? 'is-invalid' : ''}
+                      value={item.val}  onChange={e => { item.val = e.target.value; setArray([...array]); }} />
+              {arrayCtr[i].err() && <div>value is required!</div>}
+            </div>
+           ))
+         }
+         
+         <div>
+           <button onClick={submit}>Submit</button>
+         </div>
+       </React.Fragment>
 }
 ```
 
