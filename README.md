@@ -170,3 +170,5 @@ getState | Function | Get state of specific result | key - string. returns {vali
 getMessage | Function | Get message of specific result | key - string, optional rule - string
 hasError | Function | Get if specific result has error | key - string, optional rule - string, optional dirty - boolean
 isValid | Function | Is context valid | skipCustom - boolean skip custom error validation
+controls | Field | model driven validation structure controls | ref - bind to html element, value - control value, dirty - is control dirty, err - has control error
+model | Field | model driven validation model | gets or sets validation model object
