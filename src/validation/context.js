@@ -13,7 +13,7 @@ export function createValidationContext(model, props) {
         if (typeof fn != "function") fn = () => { props.update.forceUpdate(); }
 
         let subscription = context.on().subscribe(fn);
-        if (props.getSubscription) props.getSubscription('Updates', subscription);
+        if (props.getSubscription) props.getSubscription('Update', subscription);
     }
 
     return context;
