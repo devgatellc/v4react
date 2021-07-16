@@ -16,4 +16,4 @@ Hook components approach defines validation methods which are easily used with r
 
 [Hook validation](./examples/HOOK.md)
 
-[General uage](./examples/GENERAL.md)
+[Common functionality](./examples/COMMON.md)
