@@ -44,4 +44,4 @@ Property | Description | Defaults
 -------- | ----------- | --------
 validators | gets or sets global validator | required, requiredIf(value, ifCase: boolean), requireChecked, email, url, min(value, min), max(value, max), minLength(value, length), maxLength(value, length), equals(value, equalValue), number, integer, pattern(value, pattern)
 converts | gets or sets global converts | trim, upper, lower
-notifyTime | gets or sets time for validation context to notify async changes
+notifyTime | gets or sets time for validation context to notify async changes | 10ms
