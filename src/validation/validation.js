@@ -235,7 +235,7 @@ export class ValidationContext {
         };
     }
 
-    notify(imediate, key) {
+    notify(sync, key) {
         if (!key) this.eventCache = [''];
         else if (this.eventCache.indexOf(key) === -1) this.eventCache.push(key);
 
@@ -248,51 +248,51 @@ export class ValidationContext {
         }
         if (this.timeOut) clearTimeout(this.timeOut);
 
-        if (imediate) exec();
+        if (sync) exec();
         else this.timeOut = setTimeout(exec, validationConfig.notifyTime);
     }
 
-    setDirty(leaveCustom, imediate) {
+    setDirty(leaveCustom, sync) {
         this.dirty = true;
         this.results.forEach(result => {
             result.dirty = true;
         });
 
         if (!leaveCustom) this.removeCustomErrors();
-        this.notify(imediate);
+        this.notify(sync);
         return this;
     }
 
-    setPristine(leaveCustom, imediate) {
+    setPristine(leaveCustom, sync) {
         this.dirty = false;
         this.results.forEach(result => {
             result.dirty = false;
         });
 
         if (!leaveCustom) this.removeCustomErrors();
-        this.notify(imediate);
+        this.notify(sync);
         return this;
     }
 
-    addResult(result, imediate) {
+    addResult(result, sync) {
         let index = this.results.findIndex(item => item.key == result.key);
 
         if (index > -1) this.results[index] = result;
         else this.results.push(result);
 
-        this.notify(imediate, result.key);
+        this.notify(sync, result.key);
         return this;
     }
 
-    removeResult(key, imediate) {
+    removeResult(key, sync) {
         let index = this.results.findIndex(item => item.key == key);
         if (index > -1) this.results.splice(index, 1);
 
-        this.notify(imediate, key);
+        this.notify(sync, key);
         return this;
     }
 
-    addError(error, imediate) {
+    addError(error, sync) {
         let name = typeof error == "string" ? error : error.name;
         let message = typeof error == "string" ? error : error.message;
 
@@ -300,19 +300,19 @@ export class ValidationContext {
             key: name,
             custome: true,
             errors: [{ name, message }]
-        }, imediate);
+        }, sync);
     }
 
-    removeError(error, imediate) {
-        return this.removeResult(error, imediate);
+    removeError(error, sync) {
+        return this.removeResult(error, sync);
     }
 
-    removeCustomErrors(imediate) {
+    removeCustomErrors(sync) {
         let results = this.results.filter(x => !x.custome);
 
         if (this.results.length != results.length) {
             this.results = results;
-            this.notify(imediate);
+            this.notify(sync);
         }
         return this;
     }
