@@ -1,7 +1,6 @@
 # Common Functionality
 
 ## ValidationContext 
-
 #### Main component which accomulates validation results and provides common functionality
 
 Property | Type | Description | Options
@@ -23,3 +22,26 @@ notify | Function | notify context on specific key. Notifications can be either 
 controls | Field | model driven validation structure controls | ref - bind to html element, value - control value, dirty - is control dirty, err - has control error, message - get validation message, validate - validate specific control in case there is dependency on other control
 model | Field | model driven validation model | gets or sets validation model object
 validate | Function | validate whole model in model driven validation | leaveCustom - boolean don't remove custom errors
+
+
+## validatateValue(value, rules)
+#### main function which validates control value using rules array. returns {name: string, message: string | function} or null
+
+### rules array can be string or object
+Propery | Type | Description
+------- | ---- | -----------
+name | string - required | identifier of rule
+message | string \| function - optional | message if rule is not valid
+validator | function - optional | rule validation function(value: any, ruleValue?: any). If not present global validate functions are used matching the rule name
+value | any - optional | if present passed to validator as the second parameter
+convert | function \| {[prop: string]: boolean \| function} - optional | convert value before validation. If present and not function use global converts
+
+
+## validationConfig 
+#### Global validation settings
+
+Property | Description | Defaults
+-------- | ----------- | --------
+validators | gets or sets global validator | required, requiredIf(value, ifCase: boolean), requireChecked, email, url, min(value, min), max(value, max), minLength(value, length), maxLength(value, length), equals(value, equalValue), number, integer, pattern(value, pattern)
+converts | gets or sets global converts | trim, upper, lower
+notifyTime | gets or sets time for validation context to notify async changes
