@@ -51,3 +51,44 @@ export default class ModelValidation extends React.Component {
      }
 }
 ```
+
+
+
+## createValidationContext(model: any, props?: {update: { forceUpdate() } | function})
+Helper function to create model validation context
+  * Define structure of validation model and assign array. First argument is default value, rest validation rules
+  * use props object to subscribe on validation updates easily. Same as context.on()
+
+## Validation Controls
+After create context from model structure validation controls are defined in context.controls property. 
+
+Property | Type | Description
+-------- | ---- | -----------
+key | Getter | unique key of the control
+rules | Getter | rules defined in validation structure
+dirty | Getter | is control dirty
+element | Getter, Setter | reference to the html control. Without this reference validation will not work
+ref | Function | set control reference
+value | Getter, Setter | get or set control value. Value can be set using directly control property controlName = someValue skipping controlName.value = someValiue
+validate | Function | validate control. Options dirty - boolean, sync - boolean
+err | Function | has control error. Options rule - string, dirty - boolean, contextDirty - validate when context is derty default true
+message | function | get error message. Options rule - string
+
+## ValidationArray
+Use ValidationArray class to define array validation.
+   * Pass model structure for complex array items
+   * Pass rules array for simple arrays
+   
+Validation array is array like object. Overrides some of array methods
+Method | Description
+------ | -----------
+for-of | default
+pop | default
+push | default
+shift | default
+unshift | default
+splice | default
+set | set item at specific position. Options index - number, item - any
+init | reinitialize array. Options ...items
+toArray | convert ValidationArray to normal javascript array
+
