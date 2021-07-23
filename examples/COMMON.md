@@ -24,13 +24,6 @@ model | Field | model driven validation model | gets or sets validation model ob
 validate | Function | validate whole model in model driven validation | leaveCustom - boolean don't remove custom errors
 
 
-## createValidationContext(model?: any, props?: {update: { forceUpdate() } | function})
-Helper function to create validation context
-  * if model is null template driven context is created
-  * pass model structure for model driven validation
-  * use props object to subscribe on validation updates easily. Same as context.on()
-
-
 ## validatateValue(value, rules)
 Main function which validates control value using rules array. returns {name: string, message: string | function} or null
 
