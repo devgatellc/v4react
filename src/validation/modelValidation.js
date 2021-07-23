@@ -161,15 +161,15 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
             value = val;
         },
 
-        validate: (dirty, immediate) => {
+        validate: (dirty, sync) => {
             if (dirty === undefined) dirty = isDirty();
 
             let errors = validateValue(value, rules);
 
             if (element)
-                context.addResult({ key, errors, dirty }, immediate === undefined ? true : immediate);
+                context.addResult({ key, errors, dirty }, sync === undefined ? true : sync);
             else
-                context.removeResult(key, immediate === undefined ? true : immediate);
+                context.removeResult(key, sync === undefined ? true : sync);
 
             return !errors;
         },
