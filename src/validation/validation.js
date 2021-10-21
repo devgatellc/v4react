@@ -29,7 +29,7 @@ let globalValidators = {
     },
 
     min: function (value, min) {
-        if (!value || (!min && min !== 0)) return true;
+        if ((!value && value !== 0) || (!min && min !== 0)) return true;
 
         let number = Number(value);
         if (!globalValidators.number(number)) return false;
@@ -37,7 +37,7 @@ let globalValidators = {
     },
 
     max: function (value, max) {
-        if (!value || (!max && max !== 0)) return true;
+        if ((!value && value !== 0) || (!max && max !== 0)) return true;
 
         let number = Number(value);
         if (!globalValidators.number(number)) return false;
