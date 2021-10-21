@@ -10,8 +10,8 @@ export function useValidationContext() {
             obj[prop] = context[prop];
 
         for (let prop of Object.getOwnPropertyNames(Object.getPrototypeOf(context))) {
-            if (prop == 'constructor') continue;
-            if (typeof context[prop] == 'function')
+            if (prop === 'constructor') continue;
+            if (typeof context[prop] === 'function')
                 obj[prop] = context[prop].bind(obj);
         }
 
@@ -24,7 +24,7 @@ export function useValidationContext() {
 }
 
 export function useValidation(defaultValue, rules, context, deps, enabled) {
-    if (typeof deps == "function") {
+    if (typeof deps === "function") {
         enabled = deps;
         deps = undefined;
     }
@@ -74,7 +74,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
 }
 
 export function useValidationArray(defaultValue, keyfn, rules, context, deps, enabled) {
-    if (typeof deps == "function") {
+    if (typeof deps === "function") {
         enabled = deps;
         deps = undefined;
     }
@@ -131,7 +131,7 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
     useEffect(() => {
         for (let prop in context.controls) {
             if (context.controls[prop].group !== groupKey) continue;
-            if (controls.find(x => x.key == prop)) continue;
+            if (controls.find(x => x.key === prop)) continue;
 
             context.removeResult(context.controls[prop].key, false);
             delete context.controls[prop];

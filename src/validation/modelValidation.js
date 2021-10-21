@@ -72,7 +72,7 @@ class ArrayModel {
         let fn = (model) => {
             if (!model) return model;
 
-            if (model.key && typeof model.key == "string") {
+            if (model.key && typeof model.key === "string") {
                 return model.value;
             }
 
@@ -97,12 +97,12 @@ function createArrayModel(structValue, context, defaultArray) {
 
     return new Proxy(model, {
         get: function (obj, prop) {
-            if (prop == '_elements' || prop == 'structure' || prop == 'context' ||
-                prop == 'pop' || prop == 'push' || prop == 'shift' || prop == 'unshift' ||
-                prop == 'splice' || prop == 'set' || prop == 'init' || prop == 'toArray') return obj[prop];
+            if (prop === '_elements' || prop === 'structure' || prop === 'context' ||
+                prop === 'pop' || prop === 'push' || prop === 'shift' || prop === 'unshift' ||
+                prop === 'splice' || prop === 'set' || prop === 'init' || prop === 'toArray') return obj[prop];
 
             const value = model._elements[prop];
-            if (typeof value == "function") return value.bind(obj._elements);
+            if (typeof value === "function") return value.bind(obj._elements);
 
             return value;
         },
@@ -134,6 +134,7 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
     const key = unique_key();
     let element = null, value = overrideDefault !== undefined ? overrideDefault : defaultValue;
 
+    const validateModelOnChange = !!rules.length && rules[rules.length - 1] === true && rules.pop();
     const isDirty = () => context.results.find(x => x.key === key)?.dirty;
 
     const obj = {
@@ -151,10 +152,13 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
 
         get value() { return value; },
         set value(val) {
-            if (value == val) return;
+            if (value === val) return;
 
             value = val;
             this.validate(true, true);
+
+            if (validateModelOnChange)
+                context.validate();
         },
 
         setValue(val) {
@@ -178,8 +182,8 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
             if (contextDirty !== null && context.dirty !== contextDirty) return false;
             return context.hasError(key, rule, dirty);
         },
-        
-        message: (rule) =>{
+
+        message: (rule) => {
             return context.getMessage(key, rule);
         }
     };
@@ -197,21 +201,21 @@ function processStructure(model, prop, structValue, context, defaultModel = unde
     else if (structValue instanceof ValidationArray) type = 'array';
 
     if (modelValue === undefined) {
-        if (type == 'value') modelValue = createValueModel(structValue, context, defaultValue);
-        else if (type == 'array') modelValue = createArrayModel(structValue, context, defaultValue);
+        if (type === 'value') modelValue = createValueModel(structValue, context, defaultValue);
+        else if (type === 'array') modelValue = createArrayModel(structValue, context, defaultValue);
         else modelValue = {};
     }
 
     Object.defineProperty(model, prop, {
         get: function () { return modelValue; },
         set: function (val) {
-            if (type == 'value') modelValue.value = val;
-            else if (type == 'array') modelValue.init(...val);
+            if (type === 'value') modelValue.value = val;
+            else if (type === 'array') modelValue.init(...val);
             else throw new Error('Invalid Operation');
         }
     });
 
-    if (type == 'object') {
+    if (type === 'object') {
         for (let p in structValue)
             processStructure(modelValue, p, structValue[p], context, defaultValue);
     }
@@ -234,7 +238,7 @@ export class ModelValidationContext extends ValidationContext {
         let fn = (model) => {
             if (!model) return;
 
-            if (model.key && typeof model.key == "string" && model.validate) {
+            if (model.key && typeof model.key === "string" && model.validate) {
                 model.validate(undefined, false);
                 return;
             }
@@ -261,7 +265,7 @@ export class ModelValidationContext extends ValidationContext {
         let fn = (model) => {
             if (!model) return model;
 
-            if (model.key && typeof model.key == "string") {
+            if (model.key && typeof model.key === "string") {
                 return model.value;
             }
 
@@ -284,7 +288,7 @@ export class ModelValidationContext extends ValidationContext {
     }
 
     set model(value) {
-        let isValueType = model => model.key && typeof model.key == "string";
+        let isValueType = model => model.key && typeof model.key === "string";
 
         let fn = (model, value) => {
             if (!model) return;

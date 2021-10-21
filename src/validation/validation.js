@@ -10,7 +10,7 @@ let globalValidators = {
     },
 
     requireChecked: function (value) {
-        if (typeof value == 'string') return value == "true";
+        if (typeof value === 'string') return value === "true";
         return value;
     },
 
@@ -61,15 +61,15 @@ let globalValidators = {
 
     number: function (value) {
         if (!value && value !== 0) return true;
-        if (typeof value == "number") return true
+        if (typeof value === "number") return true
 
-        if (typeof value == "string") value = Number(value);
+        if (typeof value === "string") value = Number(value);
         return !Number.isNaN(value);
     },
 
     integer: function (value) {
         if (!value && value !== 0) return true;
-        if (typeof value == "string") value = Number(value);
+        if (typeof value === "string") value = Number(value);
 
         return Number.isInteger(value);
     },
@@ -175,15 +175,15 @@ export function validateValue(value, rules) {
             validator = rule.validator;
 
             ruleValue = rule.value;
-            if (typeof ruleValue == 'function') ruleValue = ruleValue();
+            if (typeof ruleValue === 'function') ruleValue = ruleValue();
 
             if (rule.convert) {
-                if (typeof rule.convert == 'function') value = rule.convert(value, ruleValue);
+                if (typeof rule.convert === 'function') value = rule.convert(value, ruleValue);
                 else {
                     for (const conv in rule.convert) {
                         if (!conv) continue;
 
-                        if (typeof conv == 'function') value = conv(value, ruleValue);
+                        if (typeof conv === 'function') value = conv(value, ruleValue);
                         else if (conv in globalConverts) value = globalConverts[conv](value, ruleValue);
                     }
                 }
@@ -226,7 +226,7 @@ export class ValidationContext {
                     unsubscribe: () => {
                         for (let event of events) {
                             let index = this.events.indexOf(event);
-                            if (index == -1) return;
+                            if (index === -1) return;
                             this.events.splice(index, 1);
                         }
                     }
@@ -293,8 +293,8 @@ export class ValidationContext {
     }
 
     addError(error, sync) {
-        let name = typeof error == "string" ? error : error.name;
-        let message = typeof error == "string" ? error : error.message;
+        let name = typeof error === "string" ? error : error.name;
+        let message = typeof error === "string" ? error : error.message;
 
         return this.addResult({
             key: name,
@@ -347,7 +347,7 @@ export class ValidationContext {
             }
         }
 
-        if (typeof message == "function")
+        if (typeof message === "function")
             message = message();
 
         return message;
