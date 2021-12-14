@@ -39,20 +39,20 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         get rules() { return rules; },
         get dirty() { return isDirty(); },
 
-        validate: (dirty, immediate) => {
+        validate: (dirty, sync) => {
             if (dirty === undefined) dirty = isDirty();
 
             if (enabled && !enabled(value)) {
-                context.removeResult(key, immediate === undefined ? true : immediate);
+                context.removeResult(key, sync === undefined ? true : sync);
                 return;
             }
 
             const results = validateValue(value, rules);
 
             if (!results)
-                context.removeResult(key, immediate === undefined ? true : immediate);
+                context.removeResult(key, sync === undefined ? true : sync);
             else
-                context.addResult({ key, errors: results, dirty }, immediate === undefined ? true : immediate);
+                context.addResult({ key, errors: results, dirty }, sync === undefined ? true : sync);
         },
 
         err: (rule, dirty, contextDirty = true) => {
@@ -66,9 +66,17 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     }), [value, context, ...(deps || [])]);
 
     context.controls[key] = control;
+
     useEffect(() => {
         context.controls[key].validate(true, true);
     }, [value, ...(deps || [])]);
+
+    useEffect(() => {
+        return () => {
+            context.removeResult(key, false);
+            delete context.controls[key];
+        };
+    }, []);
 
     return [value, setValue, control];
 }
@@ -94,20 +102,20 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
                 get rules() { return rules; },
                 get dirty() { return isDirty(); },
 
-                validate: (dirty, immediate) => {
+                validate: (dirty, sync) => {
                     if (dirty === undefined) dirty = isDirty();
 
                     if (enabled && !enabled(value)) {
-                        context.removeResult(key, immediate === undefined ? true : immediate);
+                        context.removeResult(key, sync === undefined ? true : sync);
                         return;
                     }
 
                     const results = validateValue(value, rules);
 
                     if (!results)
-                        context.removeResult(key, immediate === undefined ? true : immediate);
+                        context.removeResult(key, sync === undefined ? true : sync);
                     else
-                        context.addResult({ key, errors: results, dirty }, immediate === undefined ? true : immediate);
+                        context.addResult({ key, errors: results, dirty }, sync === undefined ? true : sync);
                 },
 
                 err: (rule, dirty, contextDirty = true) => {
@@ -142,6 +150,17 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
             context.controls[prop].validate(true, false);
         }
     }, [values, ...(deps || [])]);
+
+    useEffect(() => {
+        return () => {
+            for (let prop in context.controls) {
+                if (context.controls[prop].group !== groupKey) continue;
+    
+                context.removeResult(context.controls[prop].key, false);
+                delete context.controls[prop];
+            }
+        };
+    }, []);
 
     return [values, setValues, controls];
 }
