@@ -31,7 +31,7 @@ let globalValidators = {
     min: function (value, min) {
         if ((!value && value !== 0) || (!min && min !== 0)) return true;
 
-        let number = Number(value);
+        const number = Number(value);
         if (!globalValidators.number(number)) return false;
         return number >= min;
     },
@@ -39,7 +39,7 @@ let globalValidators = {
     max: function (value, max) {
         if ((!value && value !== 0) || (!max && max !== 0)) return true;
 
-        let number = Number(value);
+        const number = Number(value);
         if (!globalValidators.number(number)) return false;
         return number <= max;
     },
@@ -83,7 +83,7 @@ let globalValidators = {
             pattern = pattern.pattern;
         }
 
-        let regex = new RegExp(pattern, flags);
+        const regex = new RegExp(pattern, flags);
         return regex.test(value);
     }
 };
@@ -156,9 +156,9 @@ export function unique_key() {
 //validate value using rules
 export function validateValue(value, rules) {
     if (!rules) return null;
-    let errors = [];
+    const errors = [];
 
-    for (let rule of rules) {
+    for (const rule of rules) {
         if (!rule) continue;
 
         let ruleName;
@@ -214,18 +214,18 @@ export class ValidationContext {
         return {
             subscribe: (fn) => {
                 if (!Array.isArray(keys)) keys = [keys];
-                let events = [];
+                const events = [];
 
-                for (let key of keys) {
-                    let event = { key, fn };
+                for (const key of keys) {
+                    const event = { key, fn };
                     events.push(event);
                     this.events.push(event);
                 }
 
                 return {
                     unsubscribe: () => {
-                        for (let event of events) {
-                            let index = this.events.indexOf(event);
+                        for (const event of events) {
+                            const index = this.events.indexOf(event);
                             if (index === -1) return;
                             this.events.splice(index, 1);
                         }
@@ -239,8 +239,8 @@ export class ValidationContext {
         if (!key) this.eventCache = [''];
         else if (this.eventCache.indexOf(key) === -1) this.eventCache.push(key);
 
-        let exec = () => {
-            for (let event of this.events) {
+        const exec = () => {
+            for (const event of this.events) {
                 if (this.eventCache[0] && event.key && this.eventCache.indexOf(event.key) === -1) continue;
                 event.fn(event.key);
             }
@@ -275,7 +275,7 @@ export class ValidationContext {
     }
 
     addResult(result, sync) {
-        let index = this.results.findIndex(item => item.key == result.key);
+        const index = this.results.findIndex(item => item.key == result.key);
 
         if (index > -1) this.results[index] = result;
         else this.results.push(result);
@@ -285,7 +285,7 @@ export class ValidationContext {
     }
 
     removeResult(key, sync) {
-        let index = this.results.findIndex(item => item.key == key);
+        const index = this.results.findIndex(item => item.key == key);
         if (index > -1) this.results.splice(index, 1);
 
         this.notify(sync, key);
@@ -293,8 +293,8 @@ export class ValidationContext {
     }
 
     addError(error, sync) {
-        let name = typeof error === "string" ? error : error.name;
-        let message = typeof error === "string" ? error : error.message;
+        const name = typeof error === "string" ? error : error.name;
+        const message = typeof error === "string" ? error : error.message;
 
         return this.addResult({
             key: name,
@@ -308,7 +308,7 @@ export class ValidationContext {
     }
 
     removeCustomErrors(sync) {
-        let results = this.results.filter(x => !x.custome);
+        const results = this.results.filter(x => !x.custome);
 
         if (this.results.length != results.length) {
             this.results = results;
@@ -318,14 +318,14 @@ export class ValidationContext {
     }
 
     getState(key) {
-        let item = this.results.find(item => item.key == key);
+        const item = this.results.find(item => item.key == key);
         if (!item) return {};
 
-        let dirty = item.dirty;
-        let valid = !(item.errors && item.errors.length > 0);
+        const dirty = item.dirty;
+        const valid = !(item.errors && item.errors.length > 0);
 
-        let state = { valid, dirty, errors: {} };
-        for (let error of item.errors || []) {
+        const state = { valid, dirty, errors: {} };
+        for (const error of item.errors || []) {
             state.errors[error.name] = { message: error.message };
         }
 
@@ -333,7 +333,7 @@ export class ValidationContext {
     }
 
     getMessage(key, rule) {
-        let state = this.getState(key);
+        const state = this.getState(key);
         if (!state.errors) return "";
 
         let message = '';
@@ -341,7 +341,7 @@ export class ValidationContext {
             message = state.errors[rule].message;
         }
         else {
-            for (let prop in state.errors) {
+            for (const prop in state.errors) {
                 message = state.errors[prop].message;
                 break;
             }
@@ -354,7 +354,7 @@ export class ValidationContext {
     }
 
     hasError(key, rule = null, dirty) {
-        let state = this.getState(key);
+        const state = this.getState(key);
         if (dirty !== undefined && state.dirty !== dirty) return false;
 
         if (!rule) return state.valid === undefined ? false : !state.valid;
@@ -364,7 +364,7 @@ export class ValidationContext {
     }
 
     isValid(skipCustom) {
-        let errors = this.results.filter(x => (!skipCustom || !x.custome)).flatMap(x => x.errors || []);
+        const errors = this.results.filter(x => (!skipCustom || !x.custome)).flatMap(x => x.errors || []);
         return !errors.length;
     }
 }

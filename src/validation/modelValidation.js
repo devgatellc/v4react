@@ -12,11 +12,11 @@ export class ValidationArray {
 
     *[Symbol.iterator]() {
         if (this.complex) {
-            for (let prop in this.structure)
+            for (const prop in this.structure)
                 yield this.structure[prop];
         }
         else {
-            for (let prop of this.structure)
+            for (const prop of this.structure)
                 yield prop;
         }
     }
@@ -31,7 +31,7 @@ class ArrayModel {
     }
 
     *[Symbol.iterator]() {
-        for (let item of this._elements)
+        for (const item of this._elements)
             yield item;
     }
 
@@ -48,12 +48,12 @@ class ArrayModel {
         return this._elements.shift();
     }
     unshift(...items) {
-        let elements = items.map(x => createArrayElement(x, this.structure, this.context));
+        const elements = items.map(x => createArrayElement(x, this.structure, this.context));
         this._elements.unshift(...elements);
         this.context.notify(false);
     }
     splice(start, deleteCount, ...items) {
-        let elements = items && items.map(x => createArrayElement(x, this.structure, this.context));
+        const elements = items && items.map(x => createArrayElement(x, this.structure, this.context));
         this._elements.splice(start, deleteCount, ...elements);
         this.context.notify(false);
     }
@@ -69,7 +69,7 @@ class ArrayModel {
         this.unshift(...items);
     }
     toArray() {
-        let fn = (model) => {
+        const fn = (model) => {
             if (!model) return model;
 
             if (model.key && typeof model.key === "string") {
@@ -93,7 +93,7 @@ class ArrayModel {
 }
 
 function createArrayModel(structValue, context, defaultArray) {
-    let model = new ArrayModel(structValue, context, defaultArray || []);
+    const model = new ArrayModel(structValue, context, defaultArray || []);
 
     return new Proxy(model, {
         get: function (obj, prop) {
@@ -168,7 +168,7 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
         validate: (dirty, sync) => {
             if (dirty === undefined) dirty = isDirty();
 
-            let errors = validateValue(value, rules);
+            const errors = validateValue(value, rules);
 
             if (element)
                 context.addResult({ key, errors, dirty }, sync === undefined ? true : sync);
@@ -194,7 +194,7 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
 
 function processStructure(model, prop, structValue, context, defaultModel = undefined) {
     let modelValue = model[prop];
-    let defaultValue = defaultModel ? defaultModel[prop] : undefined;
+    const defaultValue = defaultModel ? defaultModel[prop] : undefined;
 
     let type = 'object';
     if (Array.isArray(structValue)) type = 'value';
@@ -226,7 +226,7 @@ export class ModelValidationContext extends ValidationContext {
         super();
 
         const controls = {};
-        for (let prop in structure)
+        for (const prop in structure)
             processStructure(controls, prop, structure[prop], this);
 
         Object.freeze(controls);
@@ -235,7 +235,7 @@ export class ModelValidationContext extends ValidationContext {
 
     validate(leaveCustom) {
         this.results = leaveCustom ? this.results.filter(x => x.custome) : [];
-        let fn = (model) => {
+        const fn = (model) => {
             if (!model) return;
 
             if (model.key && typeof model.key === "string" && model.validate) {
@@ -260,9 +260,9 @@ export class ModelValidationContext extends ValidationContext {
     }
 
     get model() {
-        let model = {};
+        const model = {};
 
-        let fn = (model) => {
+        const fn = (model) => {
             if (!model) return model;
 
             if (model.key && typeof model.key === "string") {
@@ -281,16 +281,16 @@ export class ModelValidationContext extends ValidationContext {
             }
         }
 
-        for (let prop of Object.getOwnPropertyNames(this.controls))
+        for (const prop of Object.getOwnPropertyNames(this.controls))
             model[prop] = fn(this.controls[prop]);
 
         return model;
     }
 
     set model(value) {
-        let isValueType = model => model.key && typeof model.key === "string";
+        const isValueType = model => model.key && typeof model.key === "string";
 
-        let fn = (model, value) => {
+        const fn = (model, value) => {
             if (!model) return;
 
             if (isValueType(model)) {
@@ -307,7 +307,7 @@ export class ModelValidationContext extends ValidationContext {
             }
         }
 
-        for (let prop of Object.getOwnPropertyNames(this.controls)) {
+        for (const prop of Object.getOwnPropertyNames(this.controls)) {
             fn(this.controls[prop], value && value[prop]);
         }
 

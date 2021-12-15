@@ -1,4 +1,4 @@
-import { ValidationContext, validationConfig, validateValue, unique_key } from './validation';
+import { ValidationContext, validationConfig, validateValue } from './validation';
 import { ModelValidationContext, ValidationArray } from './modelValidation';
 
 export function createValidationContext(model, props) {

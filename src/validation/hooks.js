@@ -1,24 +1,26 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { validateValue, ValidationContext, unique_key } from './validation';
 
+export const useValueToken = Symbol();
+
 export function useValidationContext() {
     const [validation, setValidation] = useState(() => {
-        let context = new ValidationContext();
-        let obj = { controls: {} };
+        const context = new ValidationContext();
+        context.controls = {};
 
-        for (let prop in context)
-            obj[prop] = context[prop];
+        context.on().subscribe(() => setValidation({ ...validation }));
 
-        for (let prop of Object.getOwnPropertyNames(Object.getPrototypeOf(context))) {
-            if (prop === 'constructor') continue;
-            if (typeof context[prop] === 'function')
-                obj[prop] = context[prop].bind(obj);
-        }
-
-        obj.on().subscribe(() => setValidation({ ...validation }));
-
-        return obj;
+        return context;
     });
+
+    useEffect(() => {
+        return () => {
+            validation.results = [];
+            validation.events = [];
+            validation.eventCache = [];
+            validation.controls = {};
+        };
+    }, []);
 
     return validation;
 }
@@ -28,12 +30,18 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         enabled = deps;
         deps = undefined;
     }
+
     let [value, setValue] = useState(defaultValue);
+    if (typeof defaultValue === 'object' && defaultValue[useValueToken] &&
+        'value' in defaultValue && 'setValue' in defaultValue) {
+        value = defaultValue.value;
+        setValue = defaultValue.setValue;
+    }
 
-    let key = useMemo(() => unique_key(), []);
-    let isDirty = useCallback(() => context.results.find(x => x.key === key)?.dirty, []);
+    const key = useMemo(() => unique_key(), []);
+    const isDirty = useCallback(() => context.results.find(x => x.key === key)?.dirty, []);
 
-    let control = useMemo(() => ({
+    const control = useMemo(() => ({
         get key() { return key; },
         get value() { return value; },
         get rules() { return rules; },
@@ -86,13 +94,19 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
         enabled = deps;
         deps = undefined;
     }
-    let [values, setValues] = useState(defaultValue);
 
-    let groupKey = useMemo(() => unique_key(), []);
-    let controls = useMemo(() => {
-        let controls = (values || []).map(value => {
-            let key = keyfn(value);
-            let isDirty = () => context.results.find(x => x.key === key)?.dirty;
+    let [values, setValues] = useState(defaultValue);
+    if (typeof defaultValue === 'object' && defaultValue[useValueToken] &&
+        'value' in defaultValue && 'setValue' in defaultValue) {
+        values = defaultValue.value;
+        setValues = defaultValue.setValue;
+    }
+
+    const groupKey = useMemo(() => unique_key(), []);
+    const controls = useMemo(() => {
+        const controls = (values || []).map(value => {
+            const key = keyfn(value);
+            const isDirty = () => context.results.find(x => x.key === key)?.dirty;
 
             return {
                 get group() { return groupKey; },
@@ -132,12 +146,12 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
         return controls;
     }, [values, context, ...(deps || [])]);
 
-    for (let control of controls) {
+    for (const control of controls) {
         context.controls[control.key] = control;
     }
 
     useEffect(() => {
-        for (let prop in context.controls) {
+        for (const prop in context.controls) {
             if (context.controls[prop].group !== groupKey) continue;
             if (controls.find(x => x.key === prop)) continue;
 
@@ -145,7 +159,7 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
             delete context.controls[prop];
         }
 
-        for (let prop in context.controls) {
+        for (const prop in context.controls) {
             if (context.controls[prop].group !== groupKey) continue;
             context.controls[prop].validate(true, false);
         }
@@ -153,9 +167,9 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
 
     useEffect(() => {
         return () => {
-            for (let prop in context.controls) {
+            for (const prop in context.controls) {
                 if (context.controls[prop].group !== groupKey) continue;
-    
+
                 context.removeResult(context.controls[prop].key, false);
                 delete context.controls[prop];
             }
