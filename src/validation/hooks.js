@@ -6,11 +6,20 @@ const useValueToken = Symbol();
 export function useValidationContext() {
     const [validation, setValidation] = useState(() => {
         const context = new ValidationContext();
-        context.controls = {};
+        const obj = { controls: {} };
 
-        context.on().subscribe(() => setValidation({ ...validation }));
+        for (const prop in context)
+            obj[prop] = context[prop];
 
-        return context;
+        for (const prop of Object.getOwnPropertyNames(Object.getPrototypeOf(context))) {
+            if (prop === 'constructor') continue;
+            if (typeof context[prop] === 'function')
+                obj[prop] = context[prop].bind(obj);
+        }
+
+        obj.on().subscribe(() => setValidation({ ...validation }));
+
+        return obj;
     });
 
     useEffect(() => {
