@@ -34,12 +34,16 @@ export function useValidationContext() {
     return validation;
 }
 
-export function useValidationValue(defaultValue) {
-    let [value, setValue] = useState(defaultValue);
+export function toValidationValue(value, setValue){
     return {
         value,
         [useValueToken]: setValue
     };
+}
+
+export function useValidationValue(defaultValue) {
+    let [value, setValue] = useState(defaultValue);
+    return toValidationValue(value, setValue);
 }
 
 export function useValidation(defaultValue, rules, context, deps, enabled) {
