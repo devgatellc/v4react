@@ -25,6 +25,15 @@ export function useValidationContext() {
     return validation;
 }
 
+export function useValidationValue(defaultValue) {
+    let [value, setValue] = useState(defaultValue);
+    return {
+        value,
+        setValue,
+        [useValueToken]: true
+    };
+}
+
 export function useValidation(defaultValue, rules, context, deps, enabled) {
     if (typeof deps === "function") {
         enabled = deps;
