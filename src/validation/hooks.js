@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { validateValue, ValidationContext, unique_key } from './validation';
 
-export const useValueToken = Symbol();
+const useValueToken = Symbol();
 
 export function useValidationContext() {
     const [validation, setValidation] = useState(() => {
@@ -29,8 +29,7 @@ export function useValidationValue(defaultValue) {
     let [value, setValue] = useState(defaultValue);
     return {
         value,
-        setValue,
-        [useValueToken]: true
+        [useValueToken]: setValue
     };
 }
 
@@ -39,12 +38,18 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         enabled = deps;
         deps = undefined;
     }
-
-    let [value, setValue] = useState(defaultValue);
-    if (typeof defaultValue === 'object' && defaultValue[useValueToken] &&
-        'value' in defaultValue && 'setValue' in defaultValue) {
-        value = defaultValue.value;
-        setValue = defaultValue.setValue;
+    let value, setValue;
+    let [useValue, setUseValue] = useState(defaultValue);
+    if (typeof defaultValue === 'object' && defaultValue[useValueToken]) {
+        value = useValue.value;
+        setValue = value => {
+            useValue[useValueToken](value);
+            useValue.value = value;
+            setUseValue({ ...useValue });
+        };
+    } else {
+        value = useValue;
+        setValue = setUseValue;
     }
 
     const key = useMemo(() => unique_key(), []);
@@ -104,11 +109,18 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
         deps = undefined;
     }
 
-    let [values, setValues] = useState(defaultValue);
-    if (typeof defaultValue === 'object' && defaultValue[useValueToken] &&
-        'value' in defaultValue && 'setValue' in defaultValue) {
-        values = defaultValue.value;
-        setValues = defaultValue.setValue;
+    let values, setValues;
+    let [useValue, setUseValue] = useState(defaultValue);
+    if (typeof defaultValue === 'object' && defaultValue[useValueToken]) {
+        values = useValue.value;
+        setValues = value => {
+            useValue[useValueToken](value);
+            useValue.value = value;
+            setUseValue({ ...useValue });
+        };
+    } else {
+        values = useValue;
+        setValues = setUseValue;
     }
 
     const groupKey = useMemo(() => unique_key(), []);
