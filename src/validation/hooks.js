@@ -53,7 +53,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     }
     let value, setValue;
     let [useValue, setUseValue] = useState(defaultValue);
-    if (typeof defaultValue === 'object' && defaultValue[useValueToken]) {
+    if (defaultValue && typeof defaultValue === 'object' && defaultValue[useValueToken]) {
         value = useValue.value;
         setValue = value => {
             useValue[useValueToken](value);
@@ -124,7 +124,7 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
 
     let values, setValues;
     let [useValue, setUseValue] = useState(defaultValue);
-    if (typeof defaultValue === 'object' && defaultValue[useValueToken]) {
+    if (defaultValue && typeof defaultValue === 'object' && defaultValue[useValueToken]) {
         values = useValue.value;
         setValues = value => {
             useValue[useValueToken](value);
