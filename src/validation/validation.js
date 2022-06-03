@@ -254,9 +254,6 @@ export class ValidationContext {
 
     setDirty(leaveCustom, sync) {
         this.dirty = true;
-        this.results.forEach(result => {
-            result.dirty = true;
-        });
 
         if (!leaveCustom) this.removeCustomErrors();
         this.notify(sync);
@@ -265,9 +262,6 @@ export class ValidationContext {
 
     setPristine(leaveCustom, sync) {
         this.dirty = false;
-        this.results.forEach(result => {
-            result.dirty = false;
-        });
 
         if (!leaveCustom) this.removeCustomErrors();
         this.notify(sync);
@@ -321,10 +315,9 @@ export class ValidationContext {
         const item = this.results.find(item => item.key == key);
         if (!item) return {};
 
-        const dirty = item.dirty;
         const valid = !(item.errors && item.errors.length > 0);
-
-        const state = { valid, dirty, errors: {} };
+        const state = { valid, errors: {} };
+        
         for (const error of item.errors || []) {
             state.errors[error.name] = { message: error.message };
         }
@@ -355,7 +348,7 @@ export class ValidationContext {
 
     hasError(key, rule = null, dirty) {
         const state = this.getState(key);
-        if (dirty !== undefined && state.dirty !== dirty) return false;
+        if ((dirty !== undefined && dirty !== null) && state.dirty !== dirty) return false;
 
         if (!rule) return state.valid === undefined ? false : !state.valid;
 

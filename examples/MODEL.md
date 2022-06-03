@@ -66,12 +66,11 @@ Property | Type | Description
 -------- | ---- | -----------
 key | Getter | unique key of the control
 rules | Getter | rules defined in validation structure
-dirty | Getter | is control dirty
 element | Getter, Setter | reference to the html control. Without this reference validation will not work
 ref | Function | set control reference
 value | Getter, Setter | get or set control value. Value can be set using directly control property controlName = someValue skipping controlName.value = someValiue
-validate | Function | validate control. Options dirty - boolean, sync - boolean
-err | Function | has control error. Options rule - string, dirty - boolean, contextDirty - validate when context is derty default true
+validate | Function | validate control. Options sync - boolean
+err | Function | has control error. Options rule - string, dirty - validate when context is derty default true
 message | function | get error message. Options rule - string
 
 ## ValidationArray

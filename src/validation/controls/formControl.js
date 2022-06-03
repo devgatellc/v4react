@@ -52,11 +52,6 @@ export default class FormControl extends React.Component {
         return false;
     }
 
-    isDirty() {
-        if (!this.props.validation) return false;
-        return this.props.validation.results.find(x => x.key === this._keyName)?.dirty;
-    }
-
     //check for errors
     getSnapshotBeforeUpdate(prevProps) {
         const prevRules = this.getRules(prevProps);
@@ -73,10 +68,8 @@ export default class FormControl extends React.Component {
         if (!this.props.validation || !snapshot) return;
         if (prevProps.name !== this.props.name) throw new Error("name attribute change is not allowed");
 
-        let dirty = this.isDirty() ? true : this.props.value !== prevProps.value;
         this.props.validation.addResult({
             key: this._keyName,
-            dirty: dirty,
             errors: snapshot.errors
         });
     }
@@ -88,7 +81,6 @@ export default class FormControl extends React.Component {
         this._errors = validateValue(this.props.value, this.getRules(this.props))
         this.props.validation.addResult({
             key: this._keyName,
-            dirty: false,
             errors: this._errors
         });
 

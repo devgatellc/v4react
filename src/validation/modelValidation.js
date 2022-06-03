@@ -133,21 +133,18 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
     const [defaultValue, ...rules] = structValue;
     const key = unique_key();
     let element = null, value = overrideDefault !== undefined ? overrideDefault : defaultValue;
-
     const validateModelOnChange = !!rules.length && rules[rules.length - 1] === true && rules.pop();
-    const isDirty = () => context.results.find(x => x.key === key)?.dirty;
 
     const obj = {
         get key() { return key; },
         get rules() { return rules; },
-        get dirty() { return isDirty(); },
 
         get element() { return element; },
         set element(el) {
             element = el;
 
             if (!el) context.removeResult(key, false);
-            else this.validate(false, false);
+            else this.validate(false);
         },
 
         get value() { return value; },
@@ -155,7 +152,7 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
             if (value === val) return;
 
             value = val;
-            this.validate(true, true);
+            this.validate(true);
 
             if (validateModelOnChange)
                 context.validate();
@@ -165,21 +162,24 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
             value = val;
         },
 
-        validate: (dirty, sync) => {
-            if (dirty === undefined) dirty = isDirty();
-
+        validate: sync => {
             const errors = validateValue(value, rules);
 
             if (element)
-                context.addResult({ key, errors, dirty }, sync === undefined ? true : sync);
+                context.addResult({ key, errors }, sync === undefined ? true : sync);
             else
                 context.removeResult(key, sync === undefined ? true : sync);
 
             return !errors;
         },
 
-        err: (rule, dirty, contextDirty = true) => {
-            if (contextDirty !== null && context.dirty !== contextDirty) return false;
+        err: (rule, dirty = true) => {
+            if (rule === false) {
+                rule = undefined;
+                dirty = null;
+            }
+
+            if (dirty !== null && context.dirty !== dirty) return false;
             return context.hasError(key, rule, dirty);
         },
 
@@ -239,7 +239,7 @@ export class ModelValidationContext extends ValidationContext {
             if (!model) return;
 
             if (model.key && typeof model.key === "string" && model.validate) {
-                model.validate(undefined, false);
+                model.validate(false);
                 return;
             }
 

@@ -34,7 +34,7 @@ export function useValidationContext() {
     return validation;
 }
 
-export function toValidationValue(value, setValue){
+export function toValidationValue(value, setValue) {
     return {
         value,
         [useValueToken]: setValue
@@ -66,17 +66,12 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     }
 
     const key = useMemo(() => unique_key(), []);
-    const isDirty = useCallback(() => context.results.find(x => x.key === key)?.dirty, []);
-
     const control = useMemo(() => ({
         get key() { return key; },
         get value() { return value; },
         get rules() { return rules; },
-        get dirty() { return isDirty(); },
 
-        validate: (dirty, sync) => {
-            if (dirty === undefined) dirty = isDirty();
-
+        validate: sync => {
             if (enabled && !enabled(value)) {
                 context.removeResult(key, sync === undefined ? true : sync);
                 return;
@@ -87,11 +82,16 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
             if (!results)
                 context.removeResult(key, sync === undefined ? true : sync);
             else
-                context.addResult({ key, errors: results, dirty }, sync === undefined ? true : sync);
+                context.addResult({ key, errors: results }, sync === undefined ? true : sync);
         },
 
-        err: (rule, dirty, contextDirty = true) => {
-            if (contextDirty !== null && context.dirty !== contextDirty) return false;
+        err: (rule, dirty = true) => {
+            if (rule === false) {
+                rule = undefined;
+                dirty = null;
+            }
+
+            if (dirty !== null && context.dirty !== dirty) return false;
             return context.hasError(key, rule, dirty);
         },
 
@@ -103,7 +103,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     context.controls[key] = control;
 
     useEffect(() => {
-        context.controls[key].validate(true, true);
+        context.controls[key].validate(true);
     }, [value, ...(deps || [])]);
 
     useEffect(() => {
@@ -140,7 +140,6 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
     const controls = useMemo(() => {
         const controls = (values || []).map(value => {
             const key = keyfn(value);
-            const isDirty = () => context.results.find(x => x.key === key)?.dirty;
 
             return {
                 get group() { return groupKey; },
@@ -148,11 +147,8 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
 
                 get value() { return value; },
                 get rules() { return rules; },
-                get dirty() { return isDirty(); },
 
-                validate: (dirty, sync) => {
-                    if (dirty === undefined) dirty = isDirty();
-
+                validate: sync => {
                     if (enabled && !enabled(value)) {
                         context.removeResult(key, sync === undefined ? true : sync);
                         return;
@@ -163,11 +159,16 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
                     if (!results)
                         context.removeResult(key, sync === undefined ? true : sync);
                     else
-                        context.addResult({ key, errors: results, dirty }, sync === undefined ? true : sync);
+                        context.addResult({ key, errors: results }, sync === undefined ? true : sync);
                 },
 
-                err: (rule, dirty, contextDirty = true) => {
-                    if (contextDirty !== null && context.dirty !== contextDirty) return false;
+                err: (rule, dirty = true) => {
+                    if (rule === false) {
+                        rule = undefined;
+                        dirty = null;
+                    }
+        
+                    if (dirty !== null && context.dirty !== dirty) return false;
                     return context.hasError(key, rule, dirty);
                 },
 
@@ -195,7 +196,7 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
 
         for (const prop in context.controls) {
             if (context.controls[prop].group !== groupKey) continue;
-            context.controls[prop].validate(true, false);
+            context.controls[prop].validate(false);
         }
     }, [values, ...(deps || [])]);
 
