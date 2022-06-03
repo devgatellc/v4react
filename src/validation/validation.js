@@ -346,10 +346,8 @@ export class ValidationContext {
         return message;
     }
 
-    hasError(key, rule = null, dirty) {
+    hasError(key, rule = null) {
         const state = this.getState(key);
-        if ((dirty !== undefined && dirty !== null) && state.dirty !== dirty) return false;
-
         if (!rule) return state.valid === undefined ? false : !state.valid;
 
         if (!state.errors) return false;

@@ -180,7 +180,7 @@ function createValueModel(structValue, context, overrideDefault = undefined) {
             }
 
             if (dirty !== null && context.dirty !== dirty) return false;
-            return context.hasError(key, rule, dirty);
+            return context.hasError(key, rule);
         },
 
         message: (rule) => {

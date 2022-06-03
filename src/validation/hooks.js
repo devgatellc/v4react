@@ -92,7 +92,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
             }
 
             if (dirty !== null && context.dirty !== dirty) return false;
-            return context.hasError(key, rule, dirty);
+            return context.hasError(key, rule);
         },
 
         message: (rule) => {
@@ -169,7 +169,7 @@ export function useValidationArray(defaultValue, keyfn, rules, context, deps, en
                     }
         
                     if (dirty !== null && context.dirty !== dirty) return false;
-                    return context.hasError(key, rule, dirty);
+                    return context.hasError(key, rule);
                 },
 
                 message: (rule) => {

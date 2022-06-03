@@ -15,7 +15,7 @@ removeError | Function | Remove custom error | key - custom error key, sync - bo
 removeCustomErrors | Function | Remove all custom errors | sync - boolean
 getState | Function | Get state of specific result | key - string. returns {valid: boolean, errors: {[prop: string]: boolean}}
 getMessage | Function | Get message of specific result | key - string, optional rule - string
-hasError | Function | Get if specific result has error | key - string, optional rule - string, optional dirty - boolean
+hasError | Function | Get if specific result has error | key - string, optional rule - string
 isValid | Function | Is context valid | skipCustom - boolean skip custom error validation
 on | Function | subscribe to context to get notifications | keys - string \| string[], returns { subscribe(function): {unsubscribe()} }
 notify | Function | notify context on specific key. Notifications can be either sync or async | sync - boolean default false, key - string. if not passed each subscription is notified

@@ -23,17 +23,17 @@ export default class FieldValidation extends React.Component {
     }
 
     render() {
-        let { validation, always, rule, rules, dirty, children, ...rest } = this.props;
+        let { validation, always, rule, rules, children, ...rest } = this.props;
         if (!this.props.name || !validation || (!always && !validation.dirty)) return null;
 
         let hasError = false;
         if (rule || !rules) {
-            hasError = validation.hasError(this.props.name, rule, dirty);
+            hasError = validation.hasError(this.props.name, rule);
         }
         else if (rules && rules.length) {
             for (let ruleName of rules) {
                 rule = ruleName;
-                hasError = validation.hasError(this.props.name, rule, dirty);
+                hasError = validation.hasError(this.props.name, rule);
 
                 if (hasError) break;
             }
