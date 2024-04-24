@@ -1,7 +1,7 @@
 # Hook validation
 
 ```javascript
-import { useValidationContext, useValidation, useValidationArray } from 'v4react';
+import { useValidationContext, useValidation } from 'v4react';
 
 export default function HookValidation() {
     //create context
@@ -10,10 +10,6 @@ export default function HookValidation() {
     //create validation value.
     let [val, setVal, valCtr] = 
        useValidation('', ['required', {name: 'custom', validator: value=>!value || value[0] === value[0].toUpperCase()}], context);
-       
-    //create validation array
-    let [array, setArray, arrayCtr] = 
-       useValidationArray([], item=> item.id, [{name: 'required', validator: item=> !!item.val}], context);
              
     const submit = () =>{
       context.setDirty();
@@ -27,16 +23,6 @@ export default function HookValidation() {
             {valCtr.err('required') && <div>value is required!</div>}
             {valCtr.err('custom') && <div>value is invalid!</div>}
          </div>
-         
-         {
-           array.map((item, i)=>(
-            <div key={item.id}>
-               <input type="text" className={arrayCtr[i].err()? 'is-invalid' : ''}
-                      value={item.val}  onChange={e => { item.val = e.target.value; setArray([...array]); }} />
-              {arrayCtr[i].err() && <div>value is required!</div>}
-            </div>
-           ))
-         }
          
          <div>
            <button onClick={submit}>Submit</button>

@@ -1,7 +1,7 @@
 # Model driven validation
 
 ```javascript
-import { createValidationContext, ValidationArray } from 'v4react';
+import { createValidationContext } from 'v4react';
 
 export default class ModelValidation extends React.Component {
    constructor(props) {
@@ -10,10 +10,6 @@ export default class ModelValidation extends React.Component {
            //create validation structure
            this.validation = createValidationContext({//default value, validation rules
              val: ['', 'required', {name: 'custom', validator: value=>!value || value[0] === value[0].toUpperCase()}], 
-             array: new ValidationArray({
-                id: [''],
-                val: ['', 'required']
-             })
            }, { update: this });
        }
        
@@ -33,16 +29,6 @@ export default class ModelValidation extends React.Component {
             {controls.val.err('required') && <div>value is required!</div>}
             {controls.val.err('custom') && <div>value is invalid!</div>}
          </div>
-         
-         {
-           controls.array.map(item=>(
-            <div key={item.id.val}>
-               <input type="text" ref={item.val.ref} className={item.val.err()? 'is-invalid' : ''}
-                      value={item.val.value}  onChange={e => { item.val = e.target.value; }} />
-              {item.val.err() && <div>value is required!</div>}
-            </div>
-           ))
-         }
          
          <div>
            <button onClick={this.submit}>Submit</button>
@@ -72,22 +58,4 @@ value | Getter, Setter | get or set control value. Value can be set using direct
 validate | Function | validate control. Options sync - boolean
 err | Function | has control error. Options rule - string, dirty - validate when context is derty default true
 message | function | get error message. Options rule - string
-
-## ValidationArray
-Use ValidationArray class to define array validation.
-   * Pass model structure for complex array items
-   * Pass rules array for simple arrays
-   
-Validation array is array like object. Overrides some of array methods
-Method | Description
------- | -----------
-for-of | default
-pop | default
-push | default
-shift | default
-unshift | default
-splice | default
-set | set item at specific position. Options index - number, item - any
-init | reinitialize array. Options ...items
-toArray | convert ValidationArray to normal javascript array
 

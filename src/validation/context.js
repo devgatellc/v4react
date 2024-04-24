@@ -1,5 +1,5 @@
 import { ValidationContext, validationConfig, validateValue } from './validation';
-import { ModelValidationContext, ValidationArray } from './modelValidation';
+import { ModelValidationContext } from './modelValidation';
 
 export function createValidationContext(model, props) {
     let context;
@@ -19,4 +19,4 @@ export function createValidationContext(model, props) {
     return context;
 }
 
-export { ValidationContext, validationConfig, validateValue, ModelValidationContext, ValidationArray };
+export { ValidationContext, validationConfig, validateValue, ModelValidationContext };
