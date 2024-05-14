@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useValidationContext, useValidation } from './hooks';
 
 
@@ -16,14 +16,10 @@ export function usePValidation(defaultValue, rules, deps, enabled) {
     return useValidation(defaultValue, rules, context, deps, enabled);
 }
 
-export function ValidationProvider({ children }) {
+export function ValidationProvider(props) {
     const context = useValidationContext();
 
-    return (
-        <ValidationProviderContext.Provider value={context}>
-            <ValidationProviderContextKey.Provider value={context.key}>
-                {children}
-            </ValidationProviderContextKey.Provider>
-        </ValidationProviderContext.Provider>
+    return React.createElement(ValidationProviderContext.Provider, {value: context}, 
+        React.createElement(ValidationProviderContextKey.Provider, {value: context.key}, props.children)
     );
 }
