@@ -4,31 +4,40 @@ import { validateValue, createValidationContext, unique_key } from './context';
 const useValueToken = Symbol();
 
 export function useValidationContext() {
-    const [validation, setValidation] = useState(() => {
+    const [key, setKey] = useState(0);
+
+    const [validation] = useState(() => {
         const context = createValidationContext();
-        context.controls = {};
+        context.key = key;
 
         return context;
     });
 
     useEffect(() => {
-        const sub = validation.on().subscribe(() => setValidation({ ...validation }));
+        const sub = validation.on().subscribe(() => {
+            validation.key++;
+            if(validation.key > 10000000){
+                validation.key = 0;
+            }
+
+            setKey(validation.key);
+        });
 
         return () => {
             sub.unsubscribe();
         };
-    }, [validation]);
+    }, []);
 
     return validation;
 }
 
 export function useValidationValue(value, setValue) {
-    return useMemo(()=>{
+    return useMemo(() => {
         return {
             value,
             [useValueToken]: setValue
         };
-    }, [value]);
+    }, [value, setValue]);
 }
 
 export function useValidation(defaultValue, rules, context, deps, enabled) {
@@ -80,18 +89,15 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         message: (rule) => {
             return context.getMessage(key, rule);
         }
-    }), [value, context, ...(deps || [])]);
-
-    context.controls[key] = control;
+    }), [value, ...(deps || [])]);
 
     useEffect(() => {
-        context.controls[key].validate(true);
-    }, [value, ...(deps || [])]);
+        control.validate(true);
+    }, [control]);
 
     useEffect(() => {
         return () => {
             context.removeResult(key, false);
-            delete context.controls[key];
         };
     }, []);
 

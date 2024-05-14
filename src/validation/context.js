@@ -270,7 +270,7 @@ export function createValidationContext() {
         },
     
         addResult: function(result, sync) {
-            const index = this.results.findIndex(item => item.key == result.key);
+            const index = this.results.findIndex(item => item.key === result.key);
     
             if (index > -1) this.results[index] = result;
             else this.results.push(result);
@@ -280,7 +280,7 @@ export function createValidationContext() {
         },
     
         removeResult: function(key, sync) {
-            const index = this.results.findIndex(item => item.key == key);
+            const index = this.results.findIndex(item => item.key === key);
             if (index > -1) this.results.splice(index, 1);
     
             this.notify(sync, key);
