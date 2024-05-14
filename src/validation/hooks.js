@@ -16,7 +16,7 @@ export function useValidationContext() {
     useEffect(() => {
         const sub = validation.on().subscribe(() => {
             validation.key++;
-            if(validation.key > 10000000){
+            if (validation.key > 10000000) {
                 validation.key = 0;
             }
 
@@ -62,18 +62,18 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         get value() { return value; },
         get rules() { return rules; },
 
-        validate: sync => {
+        validate: () => {
             if (enabled && !enabled(value)) {
-                context.removeResult(key, sync === undefined ? true : sync);
+                context.removeResult(key);
                 return;
             }
 
             const results = validateValue(value, rules);
 
             if (!results)
-                context.removeResult(key, sync === undefined ? true : sync);
+                context.removeResult(key);
             else
-                context.addResult({ key, errors: results }, sync === undefined ? true : sync);
+                context.addResult({ key, errors: results });
         },
 
         err: (rule, dirty = true) => {
@@ -92,12 +92,12 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     }), [value, ...(deps || [])]);
 
     useEffect(() => {
-        control.validate(true);
+        control.validate();
     }, [control]);
 
     useEffect(() => {
         return () => {
-            context.removeResult(key, false);
+            context.removeResult(key);
         };
     }, []);
 

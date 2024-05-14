@@ -134,14 +134,6 @@ export const validationConfig = {
     set converts(converts) {
         globalConverts = { ...globalConverts, ...converts }
     },
-
-    get notifyTime() {
-        return this.time || 10;
-    },
-
-    set notifyTime(time) {
-        this.time = time;
-    }
 };
 
 //generate unique key
@@ -209,86 +201,71 @@ export function createValidationContext() {
         dirty: false,
         results: [],
         events: [],
-        eventCache: [],
 
-        on: function(keys) {
-            if (!keys) keys = '';
+        on: function(key) {
+            if (!key) key = '';
     
             return {
                 subscribe: (fn) => {
-                    if (!Array.isArray(keys)) keys = [keys];
-                    const events = [];
-    
-                    for (const key of keys) {
-                        const event = { key, fn };
-                        events.push(event);
-                        this.events.push(event);
-                    }
+                    const event = { key, fn };
+                    this.events.push(event);
     
                     return {
                         unsubscribe: () => {
-                            for (const event of events) {
-                                const index = this.events.indexOf(event);
-                                if (index === -1) return;
-                                this.events.splice(index, 1);
-                            }
+                            const index = this.events.indexOf(event);
+
+                            if (index === -1) return;
+                            this.events.splice(index, 1);
                         }
                     };
                 }
             };
         },
     
-        notify: function(sync, key) {
-            if (!key) this.eventCache = [''];
-            else if (this.eventCache.indexOf(key) === -1) this.eventCache.push(key);
-    
-            const exec = () => {
-                for (const event of this.events) {
-                    if (this.eventCache[0] && event.key && this.eventCache.indexOf(event.key) === -1) continue;
-                    event.fn(event.key);
-                }
-                this.eventCache = [];
+        notify: function(key) {
+            if (!key) key = '';
+
+            for(const event of this.events){
+                if(key && event.key && event.key !== key) continue;
+
+                event.fn(key);
             }
-            if (this.timeOut) clearTimeout(this.timeOut);
-    
-            if (sync) exec();
-            else this.timeOut = setTimeout(exec, validationConfig.notifyTime);
         },
     
-        setDirty: function(sync) {
+        setDirty: function() {
             this.dirty = true;
     
-            this.notify(sync);
+            this.notify();
             return this;
         },
     
-        setPristine: function(sync) {
+        setPristine: function() {
             this.dirty = false;
     
-            this.notify(sync);
+            this.notify();
             return this;
         },
     
-        addResult: function(result, sync) {
+        addResult: function(result) {
             const index = this.results.findIndex(item => item.key === result.key);
     
             if (index > -1) this.results[index] = result;
             else this.results.push(result);
     
-            this.notify(sync, result.key);
+            this.notify(result.key);
             return this;
         },
     
-        removeResult: function(key, sync) {
+        removeResult: function(key) {
             const index = this.results.findIndex(item => item.key === key);
             if (index > -1) this.results.splice(index, 1);
     
-            this.notify(sync, key);
+            this.notify(key);
             return this;
         },
     
         getState: function(key) {
-            const item = this.results.find(item => item.key == key);
+            const item = this.results.find(item => item.key === key);
             if (!item) return {};
     
             const valid = !(item.errors && item.errors.length > 0);

@@ -1,5 +1,6 @@
 import { validationConfig, validateValue, createValidationContext } from './validation/context';
 import { useValidationContext, useValidationValue, useValidation } from './validation/hooks';
+import { usePValidationContext, usePValidation, ValidationProvider } from './validation/provider';
 
 export {
     validationConfig,
@@ -8,5 +9,9 @@ export {
 
     useValidationContext,
     useValidationValue,
-    useValidation
+    useValidation,
+
+    usePValidationContext, 
+    usePValidation, 
+    ValidationProvider
 };
