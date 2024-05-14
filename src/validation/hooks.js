@@ -1,49 +1,34 @@
 import { useState, useEffect, useMemo } from 'react';
-import { validateValue, ValidationContext, unique_key } from './validation';
+import { validateValue, createValidationContext, unique_key } from './context';
 
 const useValueToken = Symbol();
 
 export function useValidationContext() {
     const [validation, setValidation] = useState(() => {
-        const context = new ValidationContext();
-        const obj = { controls: {} };
+        const context = createValidationContext();
+        context.controls = {};
 
-        for (const prop in context)
-            obj[prop] = context[prop];
-
-        for (const prop of Object.getOwnPropertyNames(Object.getPrototypeOf(context))) {
-            if (prop === 'constructor') continue;
-            if (typeof context[prop] === 'function')
-                obj[prop] = context[prop].bind(obj);
-        }
-
-        obj.on().subscribe(() => setValidation({ ...validation }));
-
-        return obj;
+        return context;
     });
 
     useEffect(() => {
+        const sub = validation.on().subscribe(() => setValidation({ ...validation }));
+
         return () => {
-            validation.results = [];
-            validation.events = [];
-            validation.eventCache = [];
-            validation.controls = {};
+            sub.unsubscribe();
         };
-    }, []);
+    }, [validation]);
 
     return validation;
 }
 
-export function toValidationValue(value, setValue) {
-    return {
-        value,
-        [useValueToken]: setValue
-    };
-}
-
-export function useValidationValue(defaultValue) {
-    let [value, setValue] = useState(defaultValue);
-    return toValidationValue(value, setValue);
+export function useValidationValue(value, setValue) {
+    return useMemo(()=>{
+        return {
+            value,
+            [useValueToken]: setValue
+        };
+    }, [value]);
 }
 
 export function useValidation(defaultValue, rules, context, deps, enabled) {
@@ -53,13 +38,10 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     }
     let value, setValue;
     let [useValue, setUseValue] = useState(defaultValue);
+
     if (defaultValue && typeof defaultValue === 'object' && defaultValue[useValueToken]) {
-        value = useValue.value;
-        setValue = value => {
-            useValue[useValueToken](value);
-            useValue.value = value;
-            setUseValue({ ...useValue });
-        };
+        value = defaultValue.value;
+        setValue = defaultValue[useValueToken];
     } else {
         value = useValue;
         setValue = setUseValue;
