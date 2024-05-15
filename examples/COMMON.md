@@ -6,16 +6,16 @@ Main component which accomulates validation results and provides common function
 Property | Type | Description | Options
 -------- | ---- | ----------- | -------
 dirty | Field | Is context dirty or pristine
-setDirty | Function | Set Context dirty | sync - boolean
-setPristine | Function | Set context pristine | sync - boolean
-addResult | Function | Add validation result | result - {key: string, custom: boolean, errors: [{name: string, message: string \| function}]}, sync - boolean
-removeResult | Function | Remove result | key - validation result key, sync - boolean
+setDirty | Function | Set Context dirty
+setPristine | Function | Set context pristine
+addResult | Function | Add validation result | result - {key: string, custom: boolean, errors: [{name: string, message: string \| function}]}
+removeResult | Function | Remove result | key - validation result key
 getState | Function | Get state of specific result | key - string. returns {valid: boolean, errors: {[prop: string]: boolean}}
 getMessage | Function | Get message of specific result | key - string, optional rule - string
 hasError | Function | Get if specific result has error | key - string, optional rule - string
 isValid | Function | Is context valid
-on | Function | subscribe to context to get notifications | keys - string \| string[], returns { subscribe(function): {unsubscribe()} }
-notify | Function | notify context on specific key. Notifications can be either sync or async | sync - boolean default false, key - string. if not passed each subscription is notified
+on | Function | subscribe to context to get notifications | key - string, returns { subscribe(function): {unsubscribe()} }
+notify | Function | notify context on specific key | key - string. if not passed each subscription is notified
 
 
 ## validatateValue(value, rules)

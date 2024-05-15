@@ -1,6 +1,6 @@
 {
   "name": "v4react",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Reactjs validation",
   "main": "src/index.js",
   "scripts": {
