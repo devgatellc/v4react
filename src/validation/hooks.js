@@ -31,7 +31,9 @@ export function useValidationContext() {
     return validation;
 }
 
-export function useValidationValue(value, setValue) {
+export function useValidationValue(initialValue) {
+    const [value, setValue] = useState(initialValue);
+
     return useMemo(() => {
         return {
             value,
@@ -41,10 +43,11 @@ export function useValidationValue(value, setValue) {
 }
 
 export function useValidation(defaultValue, rules, context, deps, enabled) {
-    if (typeof deps === "function") {
+    if (typeof deps === "function" || typeof deps === 'boolean') {
         enabled = deps;
         deps = undefined;
     }
+
     let value, setValue;
     let [useValue, setUseValue] = useState(defaultValue);
 
@@ -63,7 +66,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         get rules() { return rules; },
 
         validate: () => {
-            if (enabled && !enabled(value)) {
+            if (enabled !== undefined && ((typeof enabled === 'function' && !enabled(value)) || (typeof enabled !== 'function' && !enabled))) {
                 context.removeResult(key);
                 return;
             }
@@ -89,7 +92,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         message: (rule) => {
             return context.getMessage(key, rule);
         }
-    }), [value, ...(deps || [])]);
+    }), [value, ...(deps || [])], enabled);
 
     useEffect(() => {
         control.validate();
