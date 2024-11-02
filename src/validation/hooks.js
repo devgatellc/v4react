@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { validateValue, createValidationContext, unique_key } from './context';
 
 const useValueToken = Symbol();
@@ -59,14 +59,22 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         setValue = setUseValue;
     }
 
+    const isEnabled = enabled === undefined || (typeof enabled === 'function' && !!enabled(value)) || !!enabled;
+    const [isDirty, setDirty] = useState(false);
+
+    const isDirtyRef = useRef(context.dirty && isEnabled);
+    if (isDirty && (!isEnabled || (isDirtyRef.value !== context.dirty && !context.dirty))) setDirty(false);
+    isDirtyRef.value = context.dirty;
+
     const key = useMemo(() => unique_key(), []);
     const control = useMemo(() => ({
         get key() { return key; },
         get value() { return value; },
         get rules() { return rules; },
+        get dirty() { return isDirty; },
 
         validate: () => {
-            if (enabled !== undefined && ((typeof enabled === 'function' && !enabled(value)) || (typeof enabled !== 'function' && !enabled))) {
+            if (!isEnabled) {
                 context.removeResult(key);
                 return;
             }
@@ -76,23 +84,42 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
             if (!results)
                 context.removeResult(key);
             else
-                context.addResult({ key, errors: results });
+                context.addResult(key, results);
         },
 
-        err: (rule, dirty = true) => {
-            if (rule === false) {
+        setDirty: () => {
+            setDirty(true);
+        },
+
+        setPristine: () => {
+            setDirty(false);
+        },
+
+        err: (rule) => {
+            return context.hasError(key, rule);
+        },
+
+        derr: (rule, state) => {
+            if (typeof rule === 'boolean') {
+                state = rule;
                 rule = undefined;
-                dirty = null;
             }
 
-            if (dirty !== null && context.dirty !== dirty) return false;
+            if (state === undefined) {
+                if (!context.dirty) return false;
+            } else if (!state) {
+                if (!isDirty) return false;
+            } else {
+                if (!context.dirty || !isDirty) return false;
+            }
+
             return context.hasError(key, rule);
         },
 
         message: (rule) => {
             return context.getMessage(key, rule);
         }
-    }), [value, ...(deps || [])], enabled);
+    }), [value, ...(deps || []), isEnabled, isDirty]);
 
     useEffect(() => {
         control.validate();
@@ -104,5 +131,9 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         };
     }, []);
 
-    return [value, setValue, control];
+    const onBlur = useCallback(() => {
+        control.setDirty();
+    }, [control]);
+
+    return [value, setValue, control, onBlur];
 }

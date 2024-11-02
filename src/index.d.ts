@@ -2,25 +2,26 @@ import * as React from 'react';
 
 declare module 'v4react' {
     export const validationConfig: ValidationConfig;
-    export function validateValue(value: any, rules: Rule[]): { name: string, message: string }[] | null;
+    export function validateValue(value: any, rules: ValidationRule[]): { name: string, message: string }[] | null;
     export function createValidationContext(): ValidationContext;
     export function useValidationContext(): ValidationContext;
     export function useValidationValue<S>(defaultValue: S | (() => S)): { value: S };
-    export function useValidation<S>(defaultValue: S | (() => S), rules: Rule[], context: ValidationContext, deps?: any[] | boolean  | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
-        [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>];
+    export function useValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
+        [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 
     export function ValidationProvider(props: any): React.FunctionComponentElement<React.ProviderProps<any>>;
     export function usePValidationContext(): ValidationContext;
-    export function usePValidation<S>(defaultValue: S | (() => S), rules: Rule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
-        [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>];
+    export function usePValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
+        [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 
 
     export interface ValidationContext {
-        dirty: boolean;
-        on: (key?: string) => { subscrube: () => { unsubscribe: () => void } };
-        notify: (key?: string) => void;
+        readonly key: number; // Validation context is immutable. Use key to trigger validation of memoized children
+        readonly dirty: boolean;
         setDirty: () => ValidationContext;
         setPristine: () => ValidationContext;
+        on: (key?: string) => { subscrube: () => { unsubscribe: () => void } };
+        notify: (key?: string) => void;
         getState: (key: string) => { valid: boolean; errors: { [prop: string]: { message: string } } };
         getMessage: (key: string, rule?: string) => string;
         hasError: (key: string, rule?: string) => boolean;
@@ -51,14 +52,20 @@ declare module 'v4react' {
         } | any;
     }
 
-    export type Rule = string | { name: string; value?: any; message?: string; validator?: (...args: any[]) => boolean; convert?: any };
+    export type ValidationConvert = string | ((value: any, ruleValue?: any) => any) | { [prop: string]: string | ((value: any, ruleValue?: any) => any) };
+
+    export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: (value: any, ruleValue?: any) => boolean; convert?: ValidationConvert };
 
     export interface ValidationControl<S> {
-        key: string; 
-        value: S; 
-        rules: Rule[]; 
-        validate: () => void; 
-        err: (rule?: string | false) => boolean; 
-        message: (rule: string)=> string
+        readonly key: string;
+        readonly value: S;
+        readonly rules: ValidationRule[];
+        readonly dirty: boolean;
+        validate: () => void;
+        setDirty: () => void;
+        setPristine: () => void;
+        err: (rule?: string) => boolean;
+        derr: (rule?: string | boolean, type?: boolean) => boolean;
+        message: (rule: string) => string
     }
 }

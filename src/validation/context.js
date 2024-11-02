@@ -174,7 +174,10 @@ export function validateValue(value, rules) {
 
             if (rule.convert) {
                 if (typeof rule.convert === 'function') value = rule.convert(value, ruleValue);
-                else if (typeof rule.convert === 'string') value = globalConverts[rule.convert](value, ruleValue);
+                else if (typeof rule.convert === 'string') {
+                    if (rule.convert in globalConverts)
+                        value = globalConverts[rule.convert](value, ruleValue);
+                }
                 else {
                     for (const conv in rule.convert) {
                         if (!conv || !rule.convert[conv]) continue;
@@ -198,18 +201,19 @@ export function validateValue(value, rules) {
 
 export function createValidationContext() {
     return {
+        key: '',
         dirty: false,
-        results: [],
+        results: new Map(),
         events: [],
 
-        on: function(key) {
+        on: function (key) {
             if (!key) key = '';
-    
+
             return {
                 subscribe: (fn) => {
                     const event = { key, fn };
                     this.events.push(event);
-    
+
                     return {
                         unsubscribe: () => {
                             const index = this.events.indexOf(event);
@@ -221,67 +225,63 @@ export function createValidationContext() {
                 }
             };
         },
-    
-        notify: function(key) {
+
+        notify: function (key) {
             if (!key) key = '';
 
-            for(const event of this.events){
-                if(key && event.key && event.key !== key) continue;
+            for (const event of this.events) {
+                if (key && event.key && event.key !== key) continue;
 
                 event.fn(key);
             }
         },
-    
-        setDirty: function() {
+
+        setDirty: function () {
             this.dirty = true;
-    
+
             this.notify();
             return this;
         },
-    
-        setPristine: function() {
+
+        setPristine: function () {
             this.dirty = false;
-    
+
             this.notify();
             return this;
         },
-    
-        addResult: function(result) {
-            const index = this.results.findIndex(item => item.key === result.key);
-    
-            if (index > -1) this.results[index] = result;
-            else this.results.push(result);
-    
-            this.notify(result.key);
-            return this;
-        },
-    
-        removeResult: function(key) {
-            const index = this.results.findIndex(item => item.key === key);
-            if (index > -1) this.results.splice(index, 1);
-    
+
+        addResult: function (key, results) {
+            this.results.set(key, results);
             this.notify(key);
+
             return this;
         },
-    
-        getState: function(key) {
-            const item = this.results.find(item => item.key === key);
-            if (!item) return {};
-    
-            const valid = !(item.errors && item.errors.length > 0);
+
+        removeResult: function (key) {
+            this.results.delete(key);
+            this.notify(key);
+
+            return this;
+        },
+
+        getState: function (key) {
+            const errors = this.results.get(key);
+            if (!errors) return {};
+
+            const valid = !errors.length > 0;
             const state = { valid, errors: {} };
-    
-            for (const error of item.errors || []) {
+
+            for (const error of errors || []) {
                 state.errors[error.name] = { message: error.message };
             }
-    
+
             return state;
         },
-    
-        getMessage: function(key, rule) {
+
+        getMessage: function (key, rule) {
             const state = this.getState(key);
             if (!state.errors) return "";
-    
+
             let message = '';
             if (rule && rule in state.errors) {
                 message = state.errors[rule].message;
@@ -292,24 +292,25 @@ export function createValidationContext() {
                     break;
                 }
             }
-    
-            if (typeof message === "function")
-                message = message();
-    
+
             return message;
         },
-    
-        hasError: function(key, rule = null) {
+
+        hasError: function (key, rule = null) {
             const state = this.getState(key);
             if (!rule) return state.valid === undefined ? false : !state.valid;
-    
+
             if (!state.errors) return false;
             return state.errors[rule] || false;
         },
-    
-        isValid: function() {
-            const errors = this.results.flatMap(x => x.errors || []);
-            return !errors.length;
+
+        isValid: function () {
+            const keys = this.results.keys();
+            for (const key of keys) {
+                if (this.results.get(key).length) return false;
+            }
+
+            return true;
         }
     };
 }

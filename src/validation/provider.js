@@ -19,7 +19,7 @@ export function usePValidation(defaultValue, rules, deps, enabled) {
 export function ValidationProvider(props) {
     const context = useValidationContext();
 
-    return React.createElement(ValidationProviderContext.Provider, {value: context}, 
-        React.createElement(ValidationProviderContextKey.Provider, {value: context.key}, props.children)
+    return React.createElement(ValidationProviderContext.Provider, { value: context },
+        React.createElement(ValidationProviderContextKey.Provider, { value: context.key }, props.children)
     );
 }
