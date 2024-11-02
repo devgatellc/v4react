@@ -39,7 +39,7 @@ dirty | boolean | Is control dirty or pristine
 setDirty | Function | Set control dirty | | boolean
 setPristine | Function | Set control pristine | | boolean
 err | Function | If control has error | rule?: string | boolean
-derr | Function | If control has error depending on the dirty state | rule?: string, state?: boolean. If state undefined - validates when context is dirty. If false - when control is dirty. If true - when both context and control are dirty. Can be passed instead of rule | boolean
+derr | Function | If control has error depending on the dirty state | rule?: string, state?: boolean. If state undefined - validates when context is dirty. If false - when control is dirty. If true - when either context or control is dirty. Can be passed instead of rule | boolean
 message | Function | Return message of the specific result | rule?: string | string
 
 ### Last parameter returned from useValidation hook can be used as control's onBlur event. It'll set control as dirty

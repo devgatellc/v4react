@@ -110,7 +110,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
             } else if (!state) {
                 if (!isDirty) return false;
             } else {
-                if (!context.dirty || !isDirty) return false;
+                if (!context.dirty && !isDirty) return false;
             }
 
             return context.hasError(key, rule);
