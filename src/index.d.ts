@@ -52,9 +52,9 @@ declare module 'v4react' {
         } | any;
     }
 
-    export type ValidationConvert = string | ((value: any, deps?: any[]) => any) | { [prop: string]: string | ((value: any, deps?: any[]) => any) };
+    export type ValidationConvert = string | ((value: any, ruleValue?: any, deps?: any[]) => any) | { [prop: string]: string | ((value: any, ruleValue?: any, deps?: any[]) => any) };
 
-    export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: (value: any, deps?: any[]) => boolean; convert?: ValidationConvert };
+    export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: (value: any, ruleValue?: any, deps?: any[]) => boolean; convert?: ValidationConvert };
 
     export interface ValidationControl<S> {
         readonly key: string;
