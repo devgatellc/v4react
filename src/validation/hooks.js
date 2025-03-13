@@ -4,14 +4,14 @@ import { validateValue, createValidationContext, unique_key } from './context';
 const useValueToken = Symbol();
 
 export function useValidationContext() {
-    const [key, setKey] = useState(0);
+    const [_, setKey] = useState(0);
 
-    const [validation] = useState(() => {
+    const validation = useMemo(() => {
         const context = createValidationContext();
-        context.key = key;
+        context.key = 0;
 
         return context;
-    });
+    }, []);
 
     useEffect(() => {
         const sub = validation.on().subscribe(() => {
@@ -49,7 +49,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     }
 
     let value, setValue;
-    let [useValue, setUseValue] = useState(defaultValue);
+    const [useValue, setUseValue] = useState(defaultValue);
 
     if (defaultValue && typeof defaultValue === 'object' && defaultValue[useValueToken]) {
         value = defaultValue.value;
@@ -59,12 +59,12 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         setValue = setUseValue;
     }
 
-    const isEnabled = enabled === undefined || (typeof enabled === 'function' && !!enabled(value)) || !!enabled;
+    const isEnabled = enabled === undefined || (typeof enabled === 'function' && !!enabled(value)) || (typeof enabled !== 'function' && !!enabled);
     const [isDirty, setDirty] = useState(false);
 
     const isDirtyRef = useRef(context.dirty && isEnabled);
     if (isDirty && (!isEnabled || (isDirtyRef.value !== context.dirty && !context.dirty))) setDirty(false);
-    isDirtyRef.value = context.dirty;
+    isDirtyRef.value = context.dirty && isEnabled;
 
     const key = useMemo(() => unique_key(), []);
     const control = useMemo(() => ({
