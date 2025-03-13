@@ -79,7 +79,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
                 return;
             }
 
-            const results = validateValue(value, rules);
+            const results = validateValue(value, rules, deps);
 
             if (!results)
                 context.removeResult(key);

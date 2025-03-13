@@ -2,7 +2,7 @@ import * as React from 'react';
 
 declare module 'v4react' {
     export const validationConfig: ValidationConfig;
-    export function validateValue(value: any, rules: ValidationRule[]): { name: string, message: string }[] | null;
+    export function validateValue(value: any, rules: ValidationRule[], deps?: any[]): { name: string, message: string }[] | null;
     export function createValidationContext(): ValidationContext;
     export function useValidationContext(): ValidationContext;
     export function useValidationValue<S>(defaultValue: S | (() => S)): { value: S };
@@ -54,7 +54,7 @@ declare module 'v4react' {
 
     export type ValidationConvert = string | ((value: any, ruleValue?: any) => any) | { [prop: string]: string | ((value: any, ruleValue?: any) => any) };
 
-    export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: (value: any, ruleValue?: any) => boolean; convert?: ValidationConvert };
+    export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: (value: any, ruleValue?: any, deps?: any[]) => boolean; convert?: ValidationConvert };
 
     export interface ValidationControl<S> {
         readonly key: string;

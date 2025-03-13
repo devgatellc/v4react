@@ -148,7 +148,7 @@ export function unique_key() {
 }
 
 //validate value using rules
-export function validateValue(value, rules) {
+export function validateValue(value, rules, deps) {
     if (!rules) return null;
     const errors = [];
 
@@ -192,7 +192,7 @@ export function validateValue(value, rules) {
         if (!validator) validator = globalValidators[ruleName];
         if (!validator) continue;
 
-        if (!validator(value, ruleValue))
+        if (!validator(value, ruleValue, deps))
             errors.push({ name: ruleName, message: ruleMessage });
     }
 
