@@ -157,7 +157,6 @@ export function validateValue(value, rules, deps) {
 
         let ruleName;
         let ruleMessage;
-        let ruleValue;
         let validator;
 
         if (typeof rule === 'string') {
@@ -169,21 +168,18 @@ export function validateValue(value, rules, deps) {
             ruleMessage = rule.message || rule.name;
             validator = rule.validator;
 
-            ruleValue = rule.value;
-            if (typeof ruleValue === 'function') ruleValue = ruleValue();
-
             if (rule.convert) {
-                if (typeof rule.convert === 'function') value = rule.convert(value, ruleValue);
+                if (typeof rule.convert === 'function') value = rule.convert(value, deps);
                 else if (typeof rule.convert === 'string') {
                     if (rule.convert in globalConverts)
-                        value = globalConverts[rule.convert](value, ruleValue);
+                        value = globalConverts[rule.convert](value, deps);
                 }
                 else {
                     for (const conv in rule.convert) {
                         if (!conv || !rule.convert[conv]) continue;
 
-                        if (typeof rule.convert[conv] === 'function') value = rule.convert[conv](value, ruleValue);
-                        else if (conv in globalConverts) value = globalConverts[conv](value, ruleValue);
+                        if (typeof rule.convert[conv] === 'function') value = rule.convert[conv](value, deps);
+                        else if (conv in globalConverts) value = globalConverts[conv](value, deps);
                     }
                 }
             }
@@ -192,7 +188,7 @@ export function validateValue(value, rules, deps) {
         if (!validator) validator = globalValidators[ruleName];
         if (!validator) continue;
 
-        if (!validator(value, ruleValue, deps))
+        if (!validator(value, deps))
             errors.push({ name: ruleName, message: ruleMessage });
     }
 

@@ -26,8 +26,8 @@ notify | Function | notify context on specific key | key: string. If not passed 
 ## useValidation\<S\>(defaultValue: S | (() => S), rules: Rule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)): [S, (val: S | ((prevState: S) => S)) => void, ValidationControl\<S\>, ()=> void];
 Similar hook like useState but validation rules are added.
 
-### Rule = string | { name: string; value?: any; message?: string; validator?: (value: any, ruleValue?: any) => boolean; convert?: Convert }
-### Convert = string | ((value: any, ruleValue?: any) => any) | { [prop: string]: string | ((value: any, ruleValue?: any) => any) }
+### Rule = string | { name: string; value?: any; message?: string; validator?: (value: any, deps?: any[]) => boolean; convert?: Convert }
+### Convert = string | ((value: any, deps?: any[]) => any) | { [prop: string]: string | ((value: any, deps?: any[]) => any) }
 ### enabled - use this if validation depends on some logic. For example controle might not be visible on the form and it should not be validated. If deps are not needed this can be passed instead of it.
 
 ### ValidationControl
