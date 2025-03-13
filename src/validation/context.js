@@ -136,17 +136,6 @@ export const validationConfig = {
     },
 };
 
-//generate unique key
-export function unique_key() {
-    function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000)
-            .toString(16)
-            .substring(1);
-    }
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-        s4() + '-' + s4() + s4() + s4();
-}
-
 //validate value using rules
 export function validateValue(value, rules, deps) {
     if (!rules) return null;

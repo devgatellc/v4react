@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { validateValue, createValidationContext, unique_key } from './context';
+import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react';
+import { validateValue, createValidationContext } from './context';
 
 const useValueToken = Symbol();
 
@@ -66,7 +66,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     if (isDirty && (!isEnabled || (isDirtyRef.value !== context.dirty && !context.dirty))) setDirty(false);
     isDirtyRef.value = context.dirty && isEnabled;
 
-    const key = useMemo(() => unique_key(), []);
+    const key = useId();
     const control = useMemo(() => ({
         get key() { return key; },
         get value() { return value; },
