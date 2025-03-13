@@ -170,7 +170,7 @@ export function validateValue(value, rules, deps) {
             validator = rule.validator;
 
             ruleValue = rule.value;
-            if (typeof ruleValue === 'function') ruleValue = ruleValue();
+            if (typeof ruleValue === 'function') ruleValue = ruleValue(deps);
 
             if (rule.convert) {
                 if (typeof rule.convert === 'function') value = rule.convert(value, ruleValue, deps);
