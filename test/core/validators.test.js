@@ -51,6 +51,18 @@ describe('number', () => {
         expect(validators.number(value)).toBe(false);
     });
 
+    it.each([NaN, false, true, {}, []])('fails for %o, which is not empty', value => {
+        expect(validators.number(value)).toBe(false);
+    });
+
+    it.each([' ', '   ', '\t', '\n'])('fails for the blank string %j instead of reading it as 0', value => {
+        expect(validators.number(value)).toBe(false);
+    });
+
+    it('passes for a number with spaces around it', () => {
+        expect(validators.number(' 5 ')).toBe(true);
+    });
+
     it.each(emptyValues)('treats %j as empty and passes', value => {
         expect(validators.number(value)).toBe(true);
     });
@@ -62,6 +74,14 @@ describe('integer', () => {
     });
 
     it.each([5.5, '5.5', 'abc'])('fails for %j', value => {
+        expect(validators.integer(value)).toBe(false);
+    });
+
+    it.each([NaN, false, true, {}, []])('fails for %o, which is not empty', value => {
+        expect(validators.integer(value)).toBe(false);
+    });
+
+    it.each([' ', '\t'])('fails for the blank string %j instead of reading it as 0', value => {
         expect(validators.integer(value)).toBe(false);
     });
 
@@ -81,7 +101,12 @@ describe('min', () => {
         [-1, 0, false],
         [0, 0, true],
         ['abc', 3, false],
-    ])('min(%j, %j) is %j', (value, limit, expected) => {
+        [false, 1, false],
+        [false, -1, false],
+        [true, 0, false],
+        [NaN, 5, false],
+        [' ', -1, false],
+    ])('min(%o, %j) is %j', (value, limit, expected) => {
         expect(validators.min(value, limit)).toBe(expected);
     });
 
@@ -103,7 +128,11 @@ describe('max', () => {
         [0, -1, false],
         [0, 0, true],
         ['abc', 3, false],
-    ])('max(%j, %j) is %j', (value, limit, expected) => {
+        [false, 1, false],
+        [false, -1, false],
+        [NaN, 5, false],
+        [' ', 5, false],
+    ])('max(%o, %j) is %j', (value, limit, expected) => {
         expect(validators.max(value, limit)).toBe(expected);
     });
 
@@ -146,7 +175,10 @@ describe('equals', () => {
         ['5', 5, false],
         [0, 0, true],
         [0, 1, false],
-    ])('equals(%j, %j) is %j', (value, other, expected) => {
+        [false, true, false],
+        [false, false, true],
+        [NaN, 5, false],
+    ])('equals(%o, %j) is %j', (value, other, expected) => {
         expect(validators.equals(value, other)).toBe(expected);
     });
 
@@ -164,11 +196,37 @@ describe('pattern', () => {
 
     it('accepts a pattern with flags', () => {
         expect(validators.pattern('ABC', { pattern: '^a', flags: 'i' })).toBe(true);
+        expect(validators.pattern('123', { pattern: '^a', flags: 'i' })).toBe(false);
+    });
+
+    it('accepts a pattern object without flags or with empty flags', () => {
+        expect(validators.pattern('x', { pattern: '^x$' })).toBe(true);
+        expect(validators.pattern('abc', { pattern: '^x$' })).toBe(false);
+        expect(validators.pattern('x', { pattern: '^x$', flags: '' })).toBe(true);
+        expect(validators.pattern('abc', { pattern: '^x$', flags: '' })).toBe(false);
+    });
+
+    it('accepts a RegExp and keeps its flags', () => {
+        expect(validators.pattern('ABC', /^[a-z]+$/i)).toBe(true);
+        expect(validators.pattern('123', /^[a-z]+$/i)).toBe(false);
+        expect(validators.pattern('ABC', /^[a-z]+$/)).toBe(false);
+    });
+
+    it('gives the same answer every time for a global RegExp', () => {
+        const regex = /^a/g;
+
+        expect(validators.pattern('abc', regex)).toBe(true);
+        expect(validators.pattern('abc', regex)).toBe(true);
     });
 
     it('tests numbers including 0', () => {
         expect(validators.pattern(0, '^0$')).toBe(true);
         expect(validators.pattern(12, '^\\d$')).toBe(false);
+    });
+
+    it('tests false instead of skipping it as empty', () => {
+        expect(validators.pattern(false, '^true$')).toBe(false);
+        expect(validators.pattern(false, '^false$')).toBe(true);
     });
 
     it.each(emptyValues)('passes for the empty value %j', value => {
@@ -196,8 +254,34 @@ describe('email', () => {
         'user name@example.com',
         'user@exa mple.com',
         'user@@example.com',
+        'user@example..com',
+        'user@sub..example.com',
+        'user@sub.-example.com',
+        'user@sub-.example.com',
+        'user@sub._example.com',
     ])('rejects %j', value => {
         expect(validators.email(value)).toBe(false);
+    });
+
+    it('accepts up to 254 characters', () => {
+        expect(validators.email(`a@${'b'.repeat(248)}.com`)).toBe(true);
+        expect(validators.email(`a@${'b'.repeat(249)}.com`)).toBe(false);
+    });
+
+    it('handles very long hostile input quickly', () => {
+        const inputs = [
+            `a@${'a.'.repeat(25000)}!`,
+            `a@${'a-a.'.repeat(10000)}!`,
+            `a@a.${'a'.repeat(50000)}!`,
+            `${'a.'.repeat(25000)}@`,
+            `"${' '.repeat(50000)}`,
+            `a@${'a.'.repeat(125)}!`,
+            `a@a.${'a'.repeat(249)}!`,
+        ];
+
+        const start = performance.now();
+        for (const input of inputs) expect(validators.email(input)).toBe(false);
+        expect(performance.now() - start).toBeLessThan(500);
     });
 
     it.each(emptyValues)('treats %j as empty and passes, so it can be optional', value => {

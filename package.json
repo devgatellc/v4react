@@ -13,10 +13,10 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "node test/react18/install.js && vitest run",
+    "test": "vitest run",
     "lint": "eslint src",
-    "test:watch": "node test/react18/install.js && vitest",
-    "test:coverage": "node test/react18/install.js && vitest run --coverage"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",

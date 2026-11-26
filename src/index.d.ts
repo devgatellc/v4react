@@ -4,14 +4,25 @@ export const validationConfig: ValidationConfig;
 export function validateValue(value: any, rules: ValidationRule[], deps?: any[]): ValidationResult[] | null;
 export function createValidationContext(): ValidationContext;
 export function useValidationContext(): ValidationContext;
-export function useValidationValue<S>(defaultValue: S | (() => S)): { value: S };
+export function useValidationValue<S>(defaultValue: S | (() => S)): ValidationValue<S>;
+export function useValidation<S>(defaultValue: ValidationValue<S>, rules: ValidationRule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
+    [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 export function useValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
     [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 
 export function ValidationProvider(props: { children?: React.ReactNode; [prop: string]: any }): React.ReactElement;
 export function usePValidationContext(): ValidationContext;
+export function usePValidation<S>(defaultValue: ValidationValue<S>, rules: ValidationRule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
+    [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 export function usePValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
     [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
+
+declare const validationValueBrand: unique symbol;
+
+export interface ValidationValue<S> {
+    readonly value: S;
+    readonly [validationValueBrand]: true;
+}
 
 export interface ValidationResult {
     name: string;
@@ -52,7 +63,7 @@ export interface ValidationValidators {
     minLength: (value: any, length: number) => boolean;
     maxLength: (value: any, length: number) => boolean;
     equals: (value: any, equalValue: any) => boolean;
-    pattern: (value: any, pattern: string | { pattern: string, flags: string }) => boolean;
+    pattern: (value: any, pattern: string | RegExp | { pattern: string, flags?: string }) => boolean;
     email: (value: any) => boolean;
     url: (value: any) => boolean;
     [name: string]: ValidationValidator;
@@ -73,7 +84,7 @@ export interface ValidationConfig {
     set converts(converts: { [name: string]: ValidationConverter });
 }
 
-export type ValidationConvert = string | ValidationConverter | { [prop: string]: string | ValidationConverter };
+export type ValidationConvert = string | ValidationConverter | { [prop: string]: boolean | ValidationConverter };
 
 export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: ValidationValidator; convert?: ValidationConvert };
 
@@ -89,3 +100,5 @@ export interface ValidationControl<S> {
     derr: (rule?: string | boolean, type?: boolean) => boolean;
     message: (rule?: string) => string;
 }
+
+export {};

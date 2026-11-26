@@ -496,4 +496,46 @@ describe.each(modes)('README examples in $mode', ({ wrapper }) => {
         act(() => probe.form.setPristine());
         expect(probe.control.dirty).toBe(false);
     });
+
+    it('validate on submit: a valid first submit resets blurred fields', async () => {
+        const save = vi.fn();
+        const probe = {};
+
+        function Form() {
+            const form = useValidationContext();
+            const [name, setName, nameControl, onNameBlur] = useValidation('', ['required'], form);
+            probe.nameControl = nameControl;
+
+            const submit = () => {
+                form.setDirty();
+
+                if (!form.isValid()) {
+                    return;
+                }
+
+                save(name);
+                form.setPristine();
+            };
+
+            return (
+                <>
+                    <input aria-label="name" value={name} onChange={event => setName(event.target.value)} onBlur={onNameBlur} />
+                    {nameControl.derr(true) && <p role="alert">{nameControl.message()}</p>}
+                    <button onClick={submit}>Save</button>
+                </>
+            );
+        }
+
+        const { user } = setup(<Form />);
+        await user.type(screen.getByLabelText('name'), 'Ann');
+        await user.tab();
+        expect(probe.nameControl.dirty).toBe(true);
+
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+        expect(save).toHaveBeenCalledWith('Ann');
+        expect(probe.nameControl.dirty).toBe(false);
+
+        await user.clear(screen.getByLabelText('name'));
+        expect(errors()).toEqual([]);
+    });
 });

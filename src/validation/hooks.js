@@ -1,5 +1,5 @@
 import { useState, useEffect, useInsertionEffect, useMemo, useRef, useCallback, useId, useSyncExternalStore } from 'react';
-import { validateValue, createValidationContext } from './context.js';
+import { validateValue, createValidationContext, resetCount } from './context.js';
 import { useStableDeps } from './deps.js';
 
 const useValueToken = Symbol();
@@ -52,11 +52,11 @@ export function useValidation(defaultValue, rules, context, depsOrEnabled, enabl
     const isEnabled = enabled === undefined || (typeof enabled === 'function' && !!enabled(value)) || (typeof enabled !== 'function' && !!enabled);
     const [isDirty, setDirty] = useState(false);
 
-    const [wasContextDirty, setWasContextDirty] = useState(context.dirty);
+    const [seenResets, setSeenResets] = useState(context[resetCount]);
 
-    if (wasContextDirty !== context.dirty) {
-        setWasContextDirty(context.dirty);
-        if (isDirty && !context.dirty) setDirty(false);
+    if (seenResets !== context[resetCount]) {
+        setSeenResets(context[resetCount]);
+        if (isDirty) setDirty(false);
     }
     if (isDirty && !isEnabled) setDirty(false);
 

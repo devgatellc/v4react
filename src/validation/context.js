@@ -1,7 +1,15 @@
 //global validation functions
+const isEmpty = value => value === null || value === undefined || value === '';
+
+const toNumber = value => {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string' && value.trim() !== '') return Number(value);
+    return NaN;
+};
+
 let globalValidators = {
     required: function (value) {
-        return (value === null || value === undefined || value === "") ? false : true;
+        return !isEmpty(value);
     },
 
     requiredIf: function (value, ifCase) {
@@ -15,34 +23,27 @@ let globalValidators = {
     },
 
     number: function (value) {
-        if (!value && value !== 0) return true;
-        if (typeof value === "number") return true
-
-        if (typeof value === "string") value = Number(value);
-        return !Number.isNaN(value);
+        if (isEmpty(value)) return true;
+        return !Number.isNaN(toNumber(value));
     },
 
     integer: function (value) {
-        if (!value && value !== 0) return true;
-        if (typeof value === "string") value = Number(value);
-
-        return Number.isInteger(value);
+        if (isEmpty(value)) return true;
+        return Number.isInteger(toNumber(value));
     },
 
     min: function (value, min) {
-        if ((!value && value !== 0) || (!min && min !== 0)) return true;
+        if (isEmpty(value) || (!min && min !== 0)) return true;
+        if (!globalValidators.number(value)) return false;
 
-        const number = Number(value);
-        if (!globalValidators.number(number)) return false;
-        return number >= min;
+        return Number(value) >= min;
     },
 
     max: function (value, max) {
-        if ((!value && value !== 0) || (!max && max !== 0)) return true;
+        if (isEmpty(value) || (!max && max !== 0)) return true;
+        if (!globalValidators.number(value)) return false;
 
-        const number = Number(value);
-        if (!globalValidators.number(number)) return false;
-        return number <= max;
+        return Number(value) <= max;
     },
 
     minLength: function (value, length) {
@@ -56,15 +57,15 @@ let globalValidators = {
     },
 
     equals: function (value, equalValue) {
-        if (!value && value !== 0) return true;
+        if (isEmpty(value)) return true;
         return value === equalValue;
     },
 
     pattern: function (value, pattern) {
-        if (!value && value !== 0) return true;
+        if (isEmpty(value)) return true;
 
         let flags = undefined;
-        if (pattern.flags) {
+        if (pattern && typeof pattern === 'object' && !(pattern instanceof RegExp)) {
             flags = pattern.flags;
             pattern = pattern.pattern;
         }
@@ -74,15 +75,16 @@ let globalValidators = {
     },
 
     email: function (value) {
-        if (value === null || value === undefined || value === '') return true;
+        if (isEmpty(value)) return true;
         if (typeof value !== 'string') return false;
+        if (value.length > 254) return false;
 
-        return /^((([a-z]|\d|[!#$%&'*+\-/=?^_`{|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#$%&'*+\-/=?^_`{|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])(|-|[A-Za-z0-9]+)))$/i
+        return /^((([a-z]|\d|[!#$%&'*+\-/=?^_`{|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#$%&'*+\-/=?^_`{|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])(|-|[A-Za-z0-9]+)))$/i
             .test(value);
     },
 
     url: function (value) {
-        if (value === null || value === undefined || value === '') return true;
+        if (isEmpty(value)) return true;
         if (typeof value !== 'string') return false;
 
         return /^(?:https?:\/\/)?(?:localhost|(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59}))(?::(?:6553[0-5]|655[0-2]\d|65[0-4]\d{2}|6[0-4]\d{3}|[1-5]\d{4}|\d{1,4}))?(?:[/?#]\S*)?$/i
@@ -194,10 +196,13 @@ function sameResults(current, next) {
     return current.every((result, index) => result.name === next[index].name && result.message === next[index].message);
 }
 
+export const resetCount = Symbol();
+
 export function createValidationContext() {
     return {
         key: 0,
         dirty: false,
+        [resetCount]: 0,
         results: new Map(),
         events: [],
 
@@ -215,6 +220,7 @@ export function createValidationContext() {
 
                             if (index === -1) return;
                             this.events.splice(index, 1);
+                            event.removed = true;
                         }
                     };
                 }
@@ -229,7 +235,8 @@ export function createValidationContext() {
                 this.key = 0;
             }
 
-            for (const event of this.events) {
+            for (const event of [...this.events]) {
+                if (event.removed) continue;
                 if (key && event.key && event.key !== key) continue;
 
                 event.fn(key);
@@ -247,13 +254,15 @@ export function createValidationContext() {
         setPristine: function () {
             if (!this.dirty) return this;
             this.dirty = false;
+            this[resetCount]++;
 
             this.notify();
             return this;
         },
 
         addResult: function (key, results) {
-            if (sameResults(this.results.get(key), results)) return this;
+            const current = this.results.get(key);
+            if (current !== results && sameResults(current, results)) return this;
 
             this.results.set(key, results);
             this.notify(key);

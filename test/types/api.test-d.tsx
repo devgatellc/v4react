@@ -16,6 +16,7 @@ import {
     type ValidationResult,
     type ValidationRule,
     type ValidationValidator,
+    type ValidationValue,
 } from 'v4react';
 
 const ctx = createValidationContext();
@@ -64,7 +65,29 @@ describe('useValidation', () => {
     });
 
     test('useValidationValue wraps the value', () => {
-        expectTypeOf(useValidationValue(1)).toEqualTypeOf<{ value: number }>();
+        expectTypeOf(useValidationValue(1)).toEqualTypeOf<ValidationValue<number>>();
+        expectTypeOf(useValidationValue(1).value).toEqualTypeOf<number>();
+    });
+
+    test('a useValidationValue result gives the hooks its own value type', () => {
+        const min = useValidationValue('');
+        const [minValue, setMin, minControl] = useValidation(min, ['number'], ctx, [min.value]);
+        const [pValue, setP, pControl] = usePValidation(min, ['number']);
+
+        const text: string = minValue;
+        setMin('5');
+        setP(prev => prev + '5');
+
+        expectTypeOf(text).toEqualTypeOf<string>();
+        expectTypeOf(minControl).toEqualTypeOf<ValidationControl<string>>();
+        expectTypeOf(pValue).toEqualTypeOf<string>();
+        expectTypeOf(pControl).toEqualTypeOf<ValidationControl<string>>();
+    });
+
+    test('a plain { value } object is an ordinary initial value', () => {
+        const [value] = useValidation({ value: 1 }, [], ctx);
+
+        expectTypeOf(value).toEqualTypeOf<{ value: number }>();
     });
 });
 
@@ -138,8 +161,18 @@ describe('rules', () => {
             { name: 'min', value: 3, message: 'Too small' },
             { name: 'equals', value: (deps: any[]) => deps[0] },
             { name: 'custom', validator: (value, ruleValue, deps) => value === ruleValue && !!deps, convert: 'trim' },
-            { name: 'mapped', convert: { trim: 'trim', digits: value => String(value).replace(/\D/g, '') } },
+            { name: 'mapped', convert: { trim: true, digits: value => String(value).replace(/\D/g, '') } },
+            { name: 'readme', value: 'abc', convert: { trim: true, lower: true } },
             { name: 'converted', convert: value => value },
+        ];
+
+        expectTypeOf(rules).toEqualTypeOf<ValidationRule[]>();
+    });
+
+    test('a convert map does not take converter names as values', () => {
+        const rules: ValidationRule[] = [
+            // @ts-expect-error
+            { name: 'equals', convert: { trim: 'upper' } },
         ];
 
         expectTypeOf(rules).toEqualTypeOf<ValidationRule[]>();
@@ -150,7 +183,7 @@ describe('validationConfig', () => {
     test('built-in validators keep their own signatures', () => {
         expectTypeOf(validationConfig.validators.required).toEqualTypeOf<(value: any) => boolean>();
         expectTypeOf(validationConfig.validators.minLength).parameter(1).toEqualTypeOf<number>();
-        expectTypeOf(validationConfig.validators.pattern).parameter(1).toEqualTypeOf<string | { pattern: string, flags: string }>();
+        expectTypeOf(validationConfig.validators.pattern).parameter(1).toEqualTypeOf<string | RegExp | { pattern: string, flags?: string }>();
         expectTypeOf(validationConfig.converts.trim).returns.toEqualTypeOf<string>();
     });
 

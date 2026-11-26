@@ -1,12 +1,8 @@
-import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import './test/react18/install.js';
 
 const react18Modules = fileURLToPath(new URL('./test/react18/node_modules/', import.meta.url)).replace(/\\/g, '/');
-
-if (!existsSync(`${react18Modules}react/package.json`)) {
-    throw new Error('React 18 test dependencies are missing. Run "node test/react18/install.js" or use "npm test".');
-}
 
 const reactProject = (major, resolve) => ({
     resolve,

@@ -198,8 +198,8 @@ Empty values (`null`, `undefined` and `''`) pass every validator except `require
 | `minLength` | length | the string or array has at least `length` items |
 | `maxLength` | length | the string or array has at most `length` items |
 | `equals` | expected value | the value is strictly equal (`===`) to the expected value |
-| `pattern` | `'regex'` or `{ pattern, flags }` | the value matches the regular expression |
-| `email` | — | the value is a valid email address. Non-string values fail. |
+| `pattern` | `'regex'`, a `RegExp`, or `{ pattern, flags }` | the value matches the regular expression |
+| `email` | — | the value is a valid email address of at most 254 characters. Non-string values fail. |
 | `url` | — | the value is a web address: `http://` or `https://` or no scheme, a domain, `localhost` or an IPv4 address, an optional port (0–65535) and an optional path. Non-string values fail. |
 
 ```js
@@ -207,6 +207,7 @@ Empty values (`null`, `undefined` and `''`) pass every validator except `require
 { name: 'min', value: 18, message: 'You must be at least 18' }
 { name: 'pattern', value: '^[A-Z]{2}\\d{6}$', message: 'Use the format AB123456' }
 { name: 'pattern', value: { pattern: '^[a-z]+$', flags: 'i' } }
+{ name: 'pattern', value: /^[a-z]+$/i }
 ```
 
 ### Custom validators
@@ -327,7 +328,7 @@ const submit = () => {
 };
 ```
 
-`form.isValid()` is up to date by the time event handlers run, because fields validate as soon as they render.
+Fields validate in an effect after each render, so `form.isValid()` reflects the values of the last render. In a submit handler, that includes everything the user typed before clicking. It does not include a value you set earlier in the same handler, because that value only reaches the field on the next render. Check such a value with [`validateValue`](#validatevaluevalue-rules-deps) instead, or normalize it in `onChange`.
 
 ### Cross-field rules
 
@@ -548,7 +549,7 @@ Returned as the third item by `useValidation` and `usePValidation`.
 | --- | --- |
 | `key` | Unique string identifying the field in the context |
 | `value` | Current value |
-| `rules` | Current rules |
+| `rules` | Rules of the last committed render, for use in effects and event handlers. During render it can still hold the previous rules, so render from the `rules` you passed to `useValidation` instead. |
 | `dirty` | Whether the field is dirty |
 | `err(rule?)` | Without a rule: whether the field has any error. With a rule: the error `{ message }` if that rule failed, otherwise `false`. |
 | `derr(rule?, mode?)` | Like `err`, but only reports errors once the form and/or field is dirty. See [Showing errors](#showing-errors). The mode can be passed as the first argument. |
@@ -598,7 +599,8 @@ Creates a context outside React. See [Validating outside React](#validating-outs
 Types are included. The value type is inferred from the initial value:
 
 ```ts
-import { useValidation, useValidationContext, type ValidationRule } from 'v4react';
+import { useValidation, useValidationContext } from 'v4react';
+import type { ValidationRule } from 'v4react';
 
 const form = useValidationContext();
 const [age, setAge, ageControl] = useValidation<string>('', ['required', 'integer'], form);
@@ -609,7 +611,7 @@ const passwordRules: ValidationRule[] = [
 ];
 ```
 
-Exported types: `ValidationContext`, `ValidationControl<S>`, `ValidationRule`, `ValidationConvert`, `ValidationResult`, `ValidationValidator`, `ValidationConverter`, `ValidationValidators`, `ValidationConverters`, `ValidationConfig` and `ValidationSubscription`.
+Exported types: `ValidationContext`, `ValidationControl<S>`, `ValidationValue<S>` (returned by `useValidationValue`), `ValidationRule`, `ValidationConvert`, `ValidationResult`, `ValidationValidator`, `ValidationConverter`, `ValidationValidators`, `ValidationConverters`, `ValidationConfig` and `ValidationSubscription`.
 
 `err` and `derr` are typed as `boolean`. To read a message, use `control.message(rule)`.
 

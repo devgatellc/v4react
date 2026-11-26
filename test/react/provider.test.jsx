@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { useEffect } from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { usePValidation, usePValidationContext, ValidationProvider } from '../../src/index.js';
 import { modes } from './helpers.jsx';
@@ -114,6 +114,34 @@ describe.each(modes)('ValidationProvider in $mode', ({ wrapper }) => {
 
         await user.type(screen.getByLabelText('first-field'), 'x');
         expect(text('first')).toBe('valid');
+    });
+
+    it('still updates the form when a child listener unsubscribes itself during notify', () => {
+        let form;
+
+        function OneShotListener() {
+            const ctx = usePValidationContext();
+            form = ctx;
+
+            useEffect(() => {
+                const subscription = ctx.on().subscribe(() => subscription.unsubscribe());
+                return () => subscription.unsubscribe();
+            }, [ctx]);
+
+            return null;
+        }
+
+        setup(
+            <ValidationProvider>
+                <OneShotListener />
+                <Status />
+            </ValidationProvider>,
+        );
+        expect(text('status')).toBe('valid');
+
+        act(() => form.addResult('server', [{ name: 'taken', message: 'Taken' }]));
+
+        expect(text('status')).toBe('invalid');
     });
 
     it.each([

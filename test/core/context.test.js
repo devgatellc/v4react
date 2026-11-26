@@ -169,6 +169,19 @@ describe('notifications', () => {
         expect(listener).toHaveBeenCalledTimes(3);
     });
 
+    it('notifies when the same array is added again after changing it in place', () => {
+        const listener = vi.fn();
+        const serverErrors = errors('taken');
+        ctx.addResult('a', serverErrors);
+        ctx.on().subscribe(listener);
+
+        serverErrors.push({ name: 'banned', message: 'banned!' });
+        ctx.addResult('a', serverErrors);
+
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect(ctx.getMessage('a', 'banned')).toBe('banned!');
+    });
+
     it('an explicit notify always notifies and bumps the key', () => {
         const listener = vi.fn();
         ctx.on().subscribe(listener);
@@ -204,6 +217,46 @@ describe('notifications', () => {
         ctx.notify();
 
         expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('still calls the next listener when one unsubscribes itself during notify', () => {
+        const once = vi.fn(() => subscription.unsubscribe());
+        const next = vi.fn();
+        const subscription = ctx.on().subscribe(once);
+        ctx.on().subscribe(next);
+
+        ctx.notify();
+        ctx.notify();
+
+        expect(once).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not call a listener that an earlier listener removed during the same notify', () => {
+        const removed = vi.fn();
+        let subscription;
+        ctx.on().subscribe(() => subscription.unsubscribe());
+        subscription = ctx.on().subscribe(removed);
+
+        ctx.notify();
+
+        expect(removed).not.toHaveBeenCalled();
+    });
+
+    it('calls a listener added during notify from the next notify on', () => {
+        const added = vi.fn();
+        let subscribed = false;
+        ctx.on().subscribe(() => {
+            if (subscribed) return;
+            subscribed = true;
+            ctx.on().subscribe(added);
+        });
+
+        ctx.notify();
+        expect(added).not.toHaveBeenCalled();
+
+        ctx.notify();
+        expect(added).toHaveBeenCalledTimes(1);
     });
 
     it('wraps the key around after 10,000,000', () => {
