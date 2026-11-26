@@ -190,7 +190,7 @@ export function validateValue(value, rules, deps) {
 
 export function createValidationContext() {
     return {
-        key: '',
+        key: 0,
         dirty: false,
         results: new Map(),
         events: [],

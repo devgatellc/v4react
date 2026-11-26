@@ -10,10 +10,10 @@ Create validation context which stores validation state and can be used as a sou
 ### ValidationContext
 Property | Type | Description | Options | Return
 -------- | ---- | ----------- | ------- | ------
-key | string | Context is immutable. Key is updated after every control validation so it can be used to update memoized child components
+key | number | Context is immutable. Key is updated after every control validation so it can be used to update memoized child components
 dirty | boolean | Is context dirty or pristine
-setDirty | Function | Set context dirty | | boolean
-setPristine | Function | Set context pristine | | boolean
+setDirty | Function | Set context dirty | | ValidationContext
+setPristine | Function | Set context pristine | | ValidationContext
 addResult | Function | Add validation result | key: string,  results: [{name: string, message: string}]
 removeResult | Function | Remove result | key: string - validation result key
 getState | Function | Get state of specific result | key: string | {valid: boolean, errors: {[prop: string]: { message: string }}}
