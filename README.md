@@ -10,7 +10,7 @@ Create validation context which stores validation state and can be used as a sou
 ### ValidationContext
 Property | Type | Description | Options | Return
 -------- | ---- | ----------- | ------- | ------
-key | number | Context is immutable. Key is updated after every control validation so it can be used to update memoized child components
+key | number | Context is immutable. Key is updated whenever validation results or the dirty state change (and on every notify call) so it can be used to update memoized child components
 dirty | boolean | Is context dirty or pristine
 setDirty | Function | Set context dirty | | ValidationContext
 setPristine | Function | Set context pristine | | ValidationContext

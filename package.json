@@ -13,7 +13,10 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test/react18/install.js && vitest run",
+    "lint": "eslint src",
+    "test:watch": "node test/react18/install.js && vitest",
+    "test:coverage": "node test/react18/install.js && vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -31,12 +34,30 @@
   },
   "homepage": "https://github.com/devgatellc/v4react#readme",
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0",
-    "@types/react": "^18.0.0 || ^19.0.0"
+    "@types/react": "^18.0.0 || ^19.0.0",
+    "react": "^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@types/react": {
       "optional": true
     }
-  }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
+    "@types/react": "^19.3.3",
+    "@vitest/coverage-v8": "^5.1.2",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jsdom": "^31.0.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.2"
+  },
+  "files": [
+    "src"
+  ]
 }

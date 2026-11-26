@@ -8,7 +8,7 @@ export function useValidationValue<S>(defaultValue: S | (() => S)): { value: S }
 export function useValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
     [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 
-export function ValidationProvider(props: { children?: React.ReactNode }): React.ReactElement;
+export function ValidationProvider(props: { children?: React.ReactNode; [prop: string]: any }): React.ReactElement;
 export function usePValidationContext(): ValidationContext;
 export function usePValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
     [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
@@ -31,7 +31,7 @@ export interface ValidationContext {
     removeResult: (key: string) => ValidationContext;
     on: (key?: string) => { subscribe: (fn: (key: string) => void) => ValidationSubscription };
     notify: (key?: string) => void;
-    getState: (key: string) => { valid?: boolean; errors?: { [prop: string]: { message: string } } };
+    getState: (key: string) => { valid: boolean; errors: { [prop: string]: { message: string } } };
     getMessage: (key: string, rule?: string) => string;
     hasError: (key: string, rule?: string) => boolean;
     isValid: () => boolean;

@@ -1,0 +1,12 @@
+{
+  "name": "v4react-react18-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

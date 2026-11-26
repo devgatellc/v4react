@@ -74,18 +74,18 @@ let globalValidators = {
     },
 
     email: function (value) {
-        if (!value && value !== 0) return true;
+        if (value === null || value === undefined || value === '') return true;
         if (typeof value !== 'string') return false;
 
-        return /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])(|-|[A-Za-z0-9]+)))$/i
+        return /^((([a-z]|\d|[!#$%&'*+\-/=?^_`{|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#$%&'*+\-/=?^_`{|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])(|-|[A-Za-z0-9]+)))$/i
             .test(value);
     },
 
     url: function (value) {
-        if (!value && value !== 0) return true;
+        if (value === null || value === undefined || value === '') return true;
         if (typeof value !== 'string') return false;
 
-        return /^(?:https?:\/\/)?(?:localhost|(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59}))(?::\d{1,5})?(?:[\/?#]\S*)?$/i
+        return /^(?:https?:\/\/)?(?:localhost|(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59}))(?::(?:6553[0-5]|655[0-2]\d|65[0-4]\d{2}|6[0-4]\d{3}|[1-5]\d{4}|\d{1,4}))?(?:[/?#]\S*)?$/i
             .test(value);
     }
 };
@@ -188,6 +188,12 @@ export function validateValue(value, rules, deps) {
     return errors.length ? errors : null;
 }
 
+function sameResults(current, next) {
+    if (!current || !next || current.length !== next.length) return false;
+
+    return current.every((result, index) => result.name === next[index].name && result.message === next[index].message);
+}
+
 export function createValidationContext() {
     return {
         key: 0,
@@ -231,6 +237,7 @@ export function createValidationContext() {
         },
 
         setDirty: function () {
+            if (this.dirty) return this;
             this.dirty = true;
 
             this.notify();
@@ -238,6 +245,7 @@ export function createValidationContext() {
         },
 
         setPristine: function () {
+            if (!this.dirty) return this;
             this.dirty = false;
 
             this.notify();
@@ -245,6 +253,8 @@ export function createValidationContext() {
         },
 
         addResult: function (key, results) {
+            if (sameResults(this.results.get(key), results)) return this;
+
             this.results.set(key, results);
             this.notify(key);
 
@@ -252,6 +262,8 @@ export function createValidationContext() {
         },
 
         removeResult: function (key) {
+            if (!this.results.has(key)) return this;
+
             this.results.delete(key);
             this.notify(key);
 
@@ -260,7 +272,7 @@ export function createValidationContext() {
 
         getState: function (key) {
             const errors = this.results.get(key);
-            if (!errors) return {};
+            if (!errors) return { valid: true, errors: {} };
 
             const valid = !errors.length > 0;
             const state = { valid, errors: {} };
@@ -295,7 +307,7 @@ export function createValidationContext() {
             if (!rule) return state.valid === undefined ? false : !state.valid;
 
             if (!state.errors) return false;
-            return !!state.errors[rule];
+            return state.errors[rule] || false;
         },
 
         isValid: function () {

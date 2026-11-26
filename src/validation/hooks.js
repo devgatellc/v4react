@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo, useCallback, useId, useSyncExternalStore } from 'react';
+import { useState, useEffect, useInsertionEffect, useMemo, useRef, useCallback, useId, useSyncExternalStore } from 'react';
 import { validateValue, createValidationContext } from './context.js';
+import { useStableDeps } from './deps.js';
 
 const useValueToken = Symbol();
 
@@ -32,11 +33,10 @@ export function useValidationValue(initialValue) {
     }, [value, setValue]);
 }
 
-export function useValidation(defaultValue, rules, context, deps, enabled) {
-    if (typeof deps === "function" || typeof deps === 'boolean') {
-        enabled = deps;
-        deps = undefined;
-    }
+export function useValidation(defaultValue, rules, context, depsOrEnabled, enabledArg) {
+    const depsIsEnabled = typeof depsOrEnabled === "function" || typeof depsOrEnabled === 'boolean';
+    const deps = depsIsEnabled ? undefined : depsOrEnabled;
+    const enabled = depsIsEnabled ? depsOrEnabled : enabledArg;
 
     let value, setValue;
     const [useValue, setUseValue] = useState(defaultValue);
@@ -60,11 +60,18 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     }
     if (isDirty && !isEnabled) setDirty(false);
 
+    const stableDeps = useStableDeps(deps);
+
+    const rulesRef = useRef(rules);
+    useInsertionEffect(() => {
+        rulesRef.current = rules;
+    });
+
     const key = useId();
     const control = useMemo(() => ({
         get key() { return key; },
         get value() { return value; },
-        get rules() { return rules; },
+        get rules() { return rulesRef.current; },
         get dirty() { return isDirty; },
 
         validate: () => {
@@ -73,7 +80,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
                 return;
             }
 
-            const results = validateValue(value, rules, deps);
+            const results = validateValue(value, rulesRef.current, stableDeps.deps);
 
             if (!results)
                 context.removeResult(key);
@@ -113,7 +120,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         message: (rule) => {
             return context.getMessage(key, rule);
         }
-    }), [value, ...(deps || []), isEnabled, isDirty]);
+    }), [value, stableDeps, isEnabled, isDirty, context, key]);
 
     useEffect(() => {
         control.validate();
@@ -123,7 +130,7 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
         return () => {
             context.removeResult(key);
         };
-    }, []);
+    }, [context, key]);
 
     const onBlur = useCallback(() => {
         control.setDirty();
