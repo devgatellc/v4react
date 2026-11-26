@@ -74,18 +74,18 @@ let globalValidators = {
     },
 
     email: function (value) {
+        if (!value && value !== 0) return true;
         if (typeof value !== 'string') return false;
-        if (!value) return true;
 
         return /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])(|-|[A-Za-z0-9]+)))$/i
             .test(value);
     },
 
     url: function (value) {
+        if (!value && value !== 0) return true;
         if (typeof value !== 'string') return false;
-        if (!value) return true;
 
-        return /^(?:http(s)?:\/\/)?(?:www\.)?[a-zA-Z0-9]+(?:[\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(?:[\/|\#|\?]\S*)?$/
+        return /^(?:https?:\/\/)?(?:localhost|(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59}))(?::\d{1,5})?(?:[\/?#]\S*)?$/i
             .test(value);
     }
 };
@@ -218,6 +218,11 @@ export function createValidationContext() {
         notify: function (key) {
             if (!key) key = '';
 
+            this.key++;
+            if (this.key > 10000000) {
+                this.key = 0;
+            }
+
             for (const event of this.events) {
                 if (key && event.key && event.key !== key) continue;
 
@@ -290,7 +295,7 @@ export function createValidationContext() {
             if (!rule) return state.valid === undefined ? false : !state.valid;
 
             if (!state.errors) return false;
-            return state.errors[rule] || false;
+            return !!state.errors[rule];
         },
 
         isValid: function () {

@@ -1,6 +1,6 @@
-import { validationConfig, validateValue, createValidationContext } from './validation/context';
-import { useValidationContext, useValidationValue, useValidation } from './validation/hooks';
-import { usePValidationContext, usePValidation, ValidationProvider } from './validation/provider';
+import { validationConfig, validateValue, createValidationContext } from './validation/context.js';
+import { useValidationContext, useValidationValue, useValidation } from './validation/hooks.js';
+import { usePValidationContext, usePValidation, ValidationProvider } from './validation/provider.js';
 
 export {
     validationConfig,

@@ -37,33 +37,45 @@ export interface ValidationContext {
     isValid: () => boolean;
 }
 
-export interface ValidationConfig {
-    validators: {
-        required: (value: any) => boolean,
-        requiredIf: (value: any, ifCase: boolean) => boolean,
-        requireChecked: (value: any) => boolean,
-        number: (value: any) => boolean,
-        integer: (value: any) => boolean,
-        min: (value: any, min: number) => boolean,
-        max: (value: any, max: number) => boolean,
-        minLength: (value: any, length: number) => boolean,
-        maxLength: (value: any, length: number) => boolean,
-        equals: (value: any, equalValue: any) => boolean,
-        pattern: (value: any, pattern: string | { pattern: string, flags: string }) => boolean,
-        email: (value: any) => boolean,
-        url: (value: any) => boolean
-    } | any;
+export type ValidationValidator = (value: any, ruleValue?: any, deps?: any[]) => boolean;
 
-    converts: {
-        trim: (value: any) => string,
-        upper: (value: any) => string,
-        lower: (value: any) => string
-    } | any;
+export type ValidationConverter = (value: any, ruleValue?: any, deps?: any[]) => any;
+
+export interface ValidationValidators {
+    required: (value: any) => boolean;
+    requiredIf: (value: any, ifCase: boolean) => boolean;
+    requireChecked: (value: any) => boolean;
+    number: (value: any) => boolean;
+    integer: (value: any) => boolean;
+    min: (value: any, min: number) => boolean;
+    max: (value: any, max: number) => boolean;
+    minLength: (value: any, length: number) => boolean;
+    maxLength: (value: any, length: number) => boolean;
+    equals: (value: any, equalValue: any) => boolean;
+    pattern: (value: any, pattern: string | { pattern: string, flags: string }) => boolean;
+    email: (value: any) => boolean;
+    url: (value: any) => boolean;
+    [name: string]: ValidationValidator;
 }
 
-export type ValidationConvert = string | ((value: any, ruleValue?: any, deps?: any[]) => any) | { [prop: string]: string | ((value: any, ruleValue?: any, deps?: any[]) => any) };
+export interface ValidationConverters {
+    trim: (value: any) => string;
+    upper: (value: any) => string;
+    lower: (value: any) => string;
+    [name: string]: ValidationConverter;
+}
 
-export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: (value: any, ruleValue?: any, deps?: any[]) => boolean; convert?: ValidationConvert };
+export interface ValidationConfig {
+    get validators(): ValidationValidators;
+    set validators(validators: { [name: string]: ValidationValidator });
+
+    get converts(): ValidationConverters;
+    set converts(converts: { [name: string]: ValidationConverter });
+}
+
+export type ValidationConvert = string | ValidationConverter | { [prop: string]: string | ValidationConverter };
+
+export type ValidationRule = string | { name: string; value?: any; message?: string; validator?: ValidationValidator; convert?: ValidationConvert };
 
 export interface ValidationControl<S> {
     readonly key: string;

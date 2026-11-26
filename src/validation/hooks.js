@@ -1,32 +1,22 @@
-import { useState, useEffect, useMemo, useRef, useCallback, useId } from 'react';
-import { validateValue, createValidationContext } from './context';
+import { useState, useEffect, useMemo, useCallback, useId, useSyncExternalStore } from 'react';
+import { validateValue, createValidationContext } from './context.js';
 
 const useValueToken = Symbol();
 
 export function useValidationContext() {
-    const [_, setKey] = useState(0);
+    const validation = useMemo(() => createValidationContext(), []);
 
-    const validation = useMemo(() => {
-        const context = createValidationContext();
-        context.key = 0;
-
-        return context;
-    }, []);
-
-    useEffect(() => {
-        const sub = validation.on().subscribe(() => {
-            validation.key++;
-            if (validation.key > 10000000) {
-                validation.key = 0;
-            }
-
-            setKey(validation.key);
-        });
+    const subscribe = useCallback((onChange) => {
+        const sub = validation.on().subscribe(onChange);
 
         return () => {
             sub.unsubscribe();
         };
-    }, []);
+    }, [validation]);
+
+    const getKey = useCallback(() => validation.key, [validation]);
+
+    useSyncExternalStore(subscribe, getKey, getKey);
 
     return validation;
 }
@@ -62,9 +52,13 @@ export function useValidation(defaultValue, rules, context, deps, enabled) {
     const isEnabled = enabled === undefined || (typeof enabled === 'function' && !!enabled(value)) || (typeof enabled !== 'function' && !!enabled);
     const [isDirty, setDirty] = useState(false);
 
-    const isDirtyRef = useRef(context.dirty && isEnabled);
-    if (isDirty && (!isEnabled || (isDirtyRef.value !== context.dirty && !context.dirty))) setDirty(false);
-    isDirtyRef.value = context.dirty && isEnabled;
+    const [wasContextDirty, setWasContextDirty] = useState(context.dirty);
+
+    if (wasContextDirty !== context.dirty) {
+        setWasContextDirty(context.dirty);
+        if (isDirty && !context.dirty) setDirty(false);
+    }
+    if (isDirty && !isEnabled) setDirty(false);
 
     const key = useId();
     const control = useMemo(() => ({
