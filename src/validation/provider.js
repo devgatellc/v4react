@@ -13,6 +13,7 @@ export function usePValidationContext() {
 
 export function usePValidation(defaultValue, rules, deps, enabled) {
     const context = usePValidationContext();
+    if (!context) throw new Error('usePValidation must be used inside a ValidationProvider.');
 
     return useValidation(defaultValue, rules, context, deps, enabled);
 }

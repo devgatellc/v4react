@@ -39,8 +39,9 @@ describe('validationConfig', () => {
     it('built-in converts return empty values unchanged', () => {
         for (const name of ['trim', 'upper', 'lower']) {
             expect(validationConfig.converts[name]('')).toBe('');
-            expect(validationConfig.converts[name](null)).toBeUndefined();
+            expect(validationConfig.converts[name](null)).toBeNull();
             expect(validationConfig.converts[name](undefined)).toBeUndefined();
+            expect(validationConfig.converts[name](NaN)).toBeNaN();
         }
     });
 

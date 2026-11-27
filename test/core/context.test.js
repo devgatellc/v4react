@@ -47,6 +47,30 @@ describe('results', () => {
         expect(ctx.hasError('a')).toBe(false);
     });
 
+    it('treats null or undefined results as no errors', () => {
+        ctx.addResult('a', null);
+        ctx.addResult('b', undefined);
+        ctx.addResult('c', errors('required'));
+        ctx.addResult('c', null);
+
+        expect(ctx.isValid()).toBe(true);
+        expect(ctx.getState('a')).toEqual({ valid: true, errors: {} });
+        expect(ctx.hasError('b')).toBe(false);
+        expect(ctx.getMessage('c')).toBe('');
+    });
+
+    it('treats false, 0 or an empty string as no errors', () => {
+        ctx.addResult('a', false);
+        ctx.addResult('b', 0);
+        ctx.addResult('c', errors('required'));
+        ctx.addResult('c', '');
+
+        expect(ctx.isValid()).toBe(true);
+        expect(ctx.getState('a')).toEqual({ valid: true, errors: {} });
+        expect(ctx.hasError('b')).toBe(false);
+        expect(ctx.getMessage('c')).toBe('');
+    });
+
     it('is invalid while any key has errors', () => {
         ctx.addResult('a', errors('required'));
         ctx.addResult('b', errors('email'));
@@ -55,6 +79,14 @@ describe('results', () => {
 
         ctx.removeResult('b');
         expect(ctx.isValid()).toBe(true);
+    });
+
+    it('reads name and message of Error objects', () => {
+        const error = new Error('Email taken');
+        ctx.addResult('server', [error]);
+
+        expect(ctx.getMessage('server')).toBe('Email taken');
+        expect(ctx.getState('server').errors).toEqual({ Error: { message: 'Email taken' } });
     });
 
     it('replaces the previous result of a key', () => {
@@ -169,6 +201,17 @@ describe('notifications', () => {
         expect(listener).toHaveBeenCalledTimes(3);
     });
 
+    it('does not notify when the same array is added again', () => {
+        const listener = vi.fn();
+        const serverErrors = errors('taken');
+        ctx.addResult('a', serverErrors);
+        ctx.on().subscribe(listener);
+
+        ctx.addResult('a', serverErrors);
+
+        expect(listener).not.toHaveBeenCalled();
+    });
+
     it('notifies when the same array is added again after changing it in place', () => {
         const listener = vi.fn();
         const serverErrors = errors('taken');
@@ -180,6 +223,64 @@ describe('notifications', () => {
 
         expect(listener).toHaveBeenCalledTimes(1);
         expect(ctx.getMessage('a', 'banned')).toBe('banned!');
+    });
+
+    it('notifies when the same array is cleared in place and added again', () => {
+        const listener = vi.fn();
+        const serverErrors = errors('taken');
+        ctx.addResult('a', serverErrors);
+        ctx.on().subscribe(listener);
+
+        serverErrors.length = 0;
+        ctx.addResult('a', serverErrors);
+
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect(ctx.hasError('a')).toBe(false);
+    });
+
+    it('notifies when an item of the same array is edited in place and added again', () => {
+        const listener = vi.fn();
+        const serverErrors = errors('taken');
+        ctx.addResult('a', serverErrors);
+        ctx.on().subscribe(listener);
+
+        serverErrors[0].message = 'changed';
+        ctx.addResult('a', serverErrors);
+
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect(ctx.getMessage('a', 'taken')).toBe('changed');
+    });
+
+    it('a listener that re-adds the stored results does not loop', () => {
+        const serverErrors = errors('taken');
+        ctx.addResult('a', serverErrors);
+        const listener = vi.fn(() => ctx.addResult('a', serverErrors));
+        ctx.on().subscribe(listener);
+
+        ctx.notify();
+
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not notify when the same array of Error objects is added again', () => {
+        const listener = vi.fn();
+        const serverErrors = [new Error('Email taken')];
+        ctx.addResult('a', serverErrors);
+        ctx.on().subscribe(listener);
+
+        ctx.addResult('a', serverErrors);
+
+        expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('a listener that re-adds null results does not loop', () => {
+        ctx.addResult('a', null);
+        const listener = vi.fn(() => ctx.addResult('a', null));
+        ctx.on().subscribe(listener);
+
+        ctx.notify();
+
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it('an explicit notify always notifies and bumps the key', () => {

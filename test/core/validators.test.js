@@ -1,11 +1,12 @@
+import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import { validationConfig } from '../../src/index.js';
 
 const validators = validationConfig.validators;
-const emptyValues = [null, undefined, ''];
+const emptyValues = [null, undefined, '', NaN];
 
 describe('required', () => {
-    it.each(emptyValues)('fails for %j', value => {
+    it.each(emptyValues)('fails for %o', value => {
         expect(validators.required(value)).toBe(false);
     });
 
@@ -43,15 +44,23 @@ describe('requireChecked', () => {
 });
 
 describe('number', () => {
-    it.each([0, 5, -1.5, '5', '5.5', '-3', '1e3'])('passes for %j', value => {
+    it.each([0, 5, -1.5, '5', '5.5', '-3', '1e3', '1E-3', '+5', '.5', '5.', '-0'])('passes for %j', value => {
         expect(validators.number(value)).toBe(true);
     });
 
-    it.each(['abc', '5a', '1,000'])('fails for %j', value => {
+    it.each(['abc', '5a', '1,000', '1.2.3', 'e5', '1e', '.', '+', '1_000'])('fails for %j', value => {
         expect(validators.number(value)).toBe(false);
     });
 
-    it.each([NaN, false, true, {}, []])('fails for %o, which is not empty', value => {
+    it.each(['0x1A', '0b101', '0o7', 'Infinity', '-Infinity', '1e400'])('fails for the non-decimal string %j', value => {
+        expect(validators.number(value)).toBe(false);
+    });
+
+    it.each([Infinity, -Infinity])('fails for %o', value => {
+        expect(validators.number(value)).toBe(false);
+    });
+
+    it.each([false, true, {}, []])('fails for %o, which is not empty', value => {
         expect(validators.number(value)).toBe(false);
     });
 
@@ -63,7 +72,20 @@ describe('number', () => {
         expect(validators.number(' 5 ')).toBe(true);
     });
 
-    it.each(emptyValues)('treats %j as empty and passes', value => {
+    it('handles very long hostile input quickly', () => {
+        const inputs = [
+            `${'1'.repeat(50000)}x`,
+            `1.${'1'.repeat(50000)}x`,
+            `1e${'1'.repeat(50000)}x`,
+            `${' '.repeat(50000)}1x`,
+        ];
+
+        const start = performance.now();
+        for (const input of inputs) expect(validators.number(input)).toBe(false);
+        expect(performance.now() - start).toBeLessThan(500);
+    });
+
+    it.each(emptyValues)('treats %o as empty and passes', value => {
         expect(validators.number(value)).toBe(true);
     });
 });
@@ -73,11 +95,11 @@ describe('integer', () => {
         expect(validators.integer(value)).toBe(true);
     });
 
-    it.each([5.5, '5.5', 'abc'])('fails for %j', value => {
+    it.each([5.5, '5.5', 'abc', '0x10', '1e400'])('fails for %j', value => {
         expect(validators.integer(value)).toBe(false);
     });
 
-    it.each([NaN, false, true, {}, []])('fails for %o, which is not empty', value => {
+    it.each([false, true, {}, []])('fails for %o, which is not empty', value => {
         expect(validators.integer(value)).toBe(false);
     });
 
@@ -85,7 +107,7 @@ describe('integer', () => {
         expect(validators.integer(value)).toBe(false);
     });
 
-    it.each(emptyValues)('treats %j as empty and passes', value => {
+    it.each(emptyValues)('treats %o as empty and passes', value => {
         expect(validators.integer(value)).toBe(true);
     });
 });
@@ -104,8 +126,11 @@ describe('min', () => {
         [false, 1, false],
         [false, -1, false],
         [true, 0, false],
-        [NaN, 5, false],
+        [NaN, 5, true],
         [' ', -1, false],
+        ['0x20', 3, false],
+        ['Infinity', 3, false],
+        [Infinity, 3, false],
     ])('min(%o, %j) is %j', (value, limit, expected) => {
         expect(validators.min(value, limit)).toBe(expected);
     });
@@ -130,8 +155,11 @@ describe('max', () => {
         ['abc', 3, false],
         [false, 1, false],
         [false, -1, false],
-        [NaN, 5, false],
+        [NaN, 5, true],
         [' ', 5, false],
+        ['0x1', 3, false],
+        ['-Infinity', 3, false],
+        [-Infinity, 3, false],
     ])('max(%o, %j) is %j', (value, limit, expected) => {
         expect(validators.max(value, limit)).toBe(expected);
     });
@@ -161,7 +189,7 @@ describe('minLength and maxLength', () => {
         expect(validators.maxLength(value, length)).toBe(expected);
     });
 
-    it.each(emptyValues)('both pass for the empty value %j', value => {
+    it.each(emptyValues)('both pass for the empty value %o', value => {
         expect(validators.minLength(value, 3)).toBe(true);
         expect(validators.maxLength(value, 3)).toBe(true);
     });
@@ -177,12 +205,12 @@ describe('equals', () => {
         [0, 1, false],
         [false, true, false],
         [false, false, true],
-        [NaN, 5, false],
+        [NaN, 5, true],
     ])('equals(%o, %j) is %j', (value, other, expected) => {
         expect(validators.equals(value, other)).toBe(expected);
     });
 
-    it.each(emptyValues)('passes for the empty value %j', value => {
+    it.each(emptyValues)('passes for the empty value %o', value => {
         expect(validators.equals(value, 'a')).toBe(true);
     });
 });
@@ -199,17 +227,55 @@ describe('pattern', () => {
         expect(validators.pattern('123', { pattern: '^a', flags: 'i' })).toBe(false);
     });
 
-    it('accepts a pattern object without flags or with empty flags', () => {
+    it('accepts a pattern object without flags or with empty or null flags', () => {
         expect(validators.pattern('x', { pattern: '^x$' })).toBe(true);
         expect(validators.pattern('abc', { pattern: '^x$' })).toBe(false);
         expect(validators.pattern('x', { pattern: '^x$', flags: '' })).toBe(true);
         expect(validators.pattern('abc', { pattern: '^x$', flags: '' })).toBe(false);
+        expect(validators.pattern('x', { pattern: '^x$', flags: null })).toBe(true);
+        expect(validators.pattern('X', { pattern: '^x$', flags: null })).toBe(false);
+        expect(validators.pattern('abc', { pattern: '^x$', flags: null })).toBe(false);
     });
 
     it('accepts a RegExp and keeps its flags', () => {
         expect(validators.pattern('ABC', /^[a-z]+$/i)).toBe(true);
         expect(validators.pattern('123', /^[a-z]+$/i)).toBe(false);
         expect(validators.pattern('ABC', /^[a-z]+$/)).toBe(false);
+    });
+
+    it('accepts a RegExp from another realm and keeps its flags', () => {
+        const regex = runInNewContext('/^[a-z]+$/i');
+
+        expect(regex instanceof RegExp).toBe(false);
+        expect(validators.pattern('ABC', regex)).toBe(true);
+        expect(validators.pattern('123', regex)).toBe(false);
+    });
+
+    it('fails for a pattern object without a string pattern', () => {
+        expect(validators.pattern('abc', { patern: '^x$' })).toBe(false);
+        expect(validators.pattern('abc', { flags: 'i' })).toBe(false);
+        expect(validators.pattern('abc', {})).toBe(false);
+    });
+
+    it('fails instead of throwing for an invalid pattern or invalid flags', () => {
+        expect(validators.pattern('[', '[')).toBe(false);
+        expect(validators.pattern('a', { pattern: '[' })).toBe(false);
+        expect(validators.pattern('a', { pattern: 'a', flags: 'zz' })).toBe(false);
+    });
+
+    it('passes when there is no pattern', () => {
+        expect(validators.pattern('abc', undefined)).toBe(true);
+        expect(validators.pattern('abc', null)).toBe(true);
+    });
+
+    it('passes when a conditional pattern is turned off with a falsy value, like min and max', () => {
+        const isUk = false;
+
+        expect(validators.pattern('abc', isUk && '^[A-Z]{2}\\d{6}$')).toBe(true);
+        expect(validators.pattern('abc', '')).toBe(true);
+        expect(validators.pattern('abc', 0)).toBe(true);
+        expect(validators.min(5, false)).toBe(true);
+        expect(validators.max(5, false)).toBe(true);
     });
 
     it('gives the same answer every time for a global RegExp', () => {
@@ -229,7 +295,7 @@ describe('pattern', () => {
         expect(validators.pattern(false, '^false$')).toBe(true);
     });
 
-    it.each(emptyValues)('passes for the empty value %j', value => {
+    it.each(emptyValues)('passes for the empty value %o', value => {
         expect(validators.pattern(value, '^a')).toBe(true);
     });
 });
@@ -241,7 +307,12 @@ describe('email', () => {
         'user+tag@example.com',
         'x_y-z@example.io',
         '"john doe"@example.com',
+        '"John.Doe[1]"@example.com',
+        '"a\\"b"@example.com',
         'ünïcödé@example.com',
+        'a@ex-ample.com',
+        'a@xn--bcher-kva.ch',
+        'a@例え.テスト',
     ])('accepts %j', value => {
         expect(validators.email(value)).toBe(true);
     });
@@ -259,6 +330,11 @@ describe('email', () => {
         'user@sub.-example.com',
         'user@sub-.example.com',
         'user@sub._example.com',
+        'a@example.com-',
+        'user@exam_ple.com',
+        'user@exam~ple.com',
+        'user@sub.exam_ple.com',
+        'user@example.co_m',
     ])('rejects %j', value => {
         expect(validators.email(value)).toBe(false);
     });
@@ -277,6 +353,9 @@ describe('email', () => {
             `"${' '.repeat(50000)}`,
             `a@${'a.'.repeat(125)}!`,
             `a@a.${'a'.repeat(249)}!`,
+            `"${'a'.repeat(40)}`,
+            `"${'a'.repeat(253)}`,
+            `"${'a '.repeat(126)}`,
         ];
 
         const start = performance.now();
@@ -284,11 +363,11 @@ describe('email', () => {
         expect(performance.now() - start).toBeLessThan(500);
     });
 
-    it.each(emptyValues)('treats %j as empty and passes, so it can be optional', value => {
+    it.each(emptyValues)('treats %o as empty and passes, so it can be optional', value => {
         expect(validators.email(value)).toBe(true);
     });
 
-    it.each([false, NaN, 0, 123, true, [], {}])('rejects the non-string %o', value => {
+    it.each([false, 0, 123, true, [], {}])('rejects the non-string %o', value => {
         expect(validators.email(value)).toBe(false);
     });
 });
@@ -350,11 +429,11 @@ describe('url', () => {
         expect(validators.url(value)).toBe(false);
     });
 
-    it.each(emptyValues)('treats %j as empty and passes, so it can be optional', value => {
+    it.each(emptyValues)('treats %o as empty and passes, so it can be optional', value => {
         expect(validators.url(value)).toBe(true);
     });
 
-    it.each([false, NaN, 0, 123, true, [], {}])('rejects the non-string %o', value => {
+    it.each([false, 0, 123, true, [], {}])('rejects the non-string %o', value => {
         expect(validators.url(value)).toBe(false);
     });
 

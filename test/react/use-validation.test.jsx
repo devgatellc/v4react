@@ -53,6 +53,24 @@ describe.each(modes)('useValidation in $mode', ({ wrapper }) => {
             expect(probe.ctr.err('required')).toEqual({ message: 'required' });
         });
 
+        it('throws a clear error when no context is passed', () => {
+            function NoContext() {
+                useValidation('', ['required']);
+                return null;
+            }
+
+            expect(() => setup(<NoContext />)).toThrow('useValidation needs a validation context as its third argument');
+            console.error.mockClear();
+        });
+
+        it('shows an invalid regex as a failed rule instead of crashing', () => {
+            const probe = {};
+            setup(<Field rules={[{ name: 'pattern', value: '[' }]} initial="abc" probe={probe} />);
+
+            expect(status()).toBe('invalid');
+            expect(probe.ctr.err('pattern')).toEqual({ message: 'pattern' });
+        });
+
         it('becomes valid as the user types and invalid again when cleared', async () => {
             const { user } = setup(<Field />);
             const input = screen.getByRole('textbox');
@@ -220,6 +238,54 @@ describe.each(modes)('useValidation in $mode', ({ wrapper }) => {
             await user.tab();
 
             expect(probe.ctr.dirty).toBe(true);
+        });
+
+        it('a control made dirty right after the form reset stays dirty', () => {
+            const probe = {};
+            setup(<Field probe={probe} />);
+            act(() => probe.ctx.setDirty());
+
+            act(() => {
+                probe.ctx.setPristine();
+                probe.ctr.setDirty();
+            });
+
+            expect(probe.ctx.dirty).toBe(false);
+            expect(probe.ctr.dirty).toBe(true);
+            expect(probe.ctr.derr(false)).toBe(true);
+        });
+
+        it('a control made dirty right before the form reset is reset', () => {
+            const probe = {};
+            setup(<Field probe={probe} />);
+            act(() => probe.ctx.setDirty());
+
+            act(() => {
+                probe.ctr.setDirty();
+                probe.ctx.setPristine();
+            });
+
+            expect(probe.ctr.dirty).toBe(false);
+            expect(probe.ctr.derr(false)).toBe(false);
+        });
+
+        it('a control read in the same handler right after the form reset is already pristine', () => {
+            const probe = {};
+            setup(<Field probe={probe} />);
+            act(() => probe.ctr.setDirty());
+            act(() => probe.ctx.setDirty());
+
+            const ctr = probe.ctr;
+            const seen = {};
+            act(() => {
+                probe.ctx.setPristine();
+                seen.dirty = ctr.dirty;
+                seen.derrField = ctr.derr(false);
+                seen.derrAny = ctr.derr(true);
+                seen.derrForm = ctr.derr();
+            });
+
+            expect(seen).toEqual({ dirty: false, derrField: false, derrAny: false, derrForm: false });
         });
     });
 

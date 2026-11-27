@@ -184,14 +184,14 @@ Rules run in order. Every rule that fails is reported, and `control.message()` r
 
 ### Built-in validators
 
-Empty values (`null`, `undefined` and `''`) pass every validator except `required`, `requiredIf` and `requireChecked`. That keeps optional fields optional: add `required` when a field must be filled in.
+Empty values (`null`, `undefined`, `''` and `NaN`) pass every validator except `required`, `requiredIf` and `requireChecked`. That keeps optional fields optional: add `required` when a field must be filled in.
 
 | Rule | Rule value | Passes when |
 | --- | --- | --- |
-| `required` | — | the value is not `null`, `undefined` or `''`. `0` and `false` count as filled in. |
+| `required` | — | the value is not `null`, `undefined`, `''` or `NaN`. `0` and `false` count as filled in. |
 | `requiredIf` | condition | the condition is falsy, or the value is filled in |
 | `requireChecked` | — | the value is `true` or `'true'`, for checkboxes and switches |
-| `number` | — | the value is a number or a numeric string (`'5'`, `'-1.5'`, `'1e3'`) |
+| `number` | — | the value is a finite number or a decimal string (`'5'`, `'-1.5'`, `'1e3'`). Hex, binary, octal and `'Infinity'` fail. |
 | `integer` | — | the value is a whole number or a whole-number string |
 | `min` | minimum | the value, as a number, is at least the minimum |
 | `max` | maximum | the value, as a number, is at most the maximum |
@@ -395,7 +395,7 @@ const [accepted, setAccepted, termsControl] = useValidation(false, [{ name: 'req
 
 ### Numbers
 
-Text inputs return strings. `number`, `integer`, `min` and `max` accept numeric strings, so you can validate the raw input and convert it when you save:
+Text inputs return strings. `number`, `integer`, `min` and `max` accept decimal strings, so validate the raw input and convert it when you save. `Number('')` is `0`, so turn a blank optional field into `null` instead: `weight === '' ? null : Number(weight)`. Don't convert with `Number()` or `parseInt()` in a rule's `convert`: text that isn't a number becomes `NaN`, which counts as empty, so the rule passes.
 
 ```js
 const [age, setAge, ageControl] = useValidation('', ['required', 'integer', { name: 'min', value: 18 }, { name: 'max', value: 120 }], form);
@@ -572,7 +572,7 @@ Returned by `useValidationContext`, `usePValidationContext` and `createValidatio
 | `getState(key)` | `{ valid, errors }` for a field or custom result. `errors` maps rule names to `{ message }`. Unknown keys return `{ valid: true, errors: {} }`. |
 | `getMessage(key, rule?)` | Message of the given rule, or of the first error |
 | `hasError(key, rule?)` | Without a rule: whether the key has any error. With a rule: the error `{ message }` or `false`. |
-| `addResult(key, results)` | Stores `[{ name, message }]` under `key`. Returns the context. |
+| `addResult(key, results)` | Stores `[{ name, message }]` under `key`. `null` or `undefined` stores no errors. Returns the context. |
 | `removeResult(key)` | Removes the result stored under `key`. Returns the context. |
 | `on(key?).subscribe(listener)` | Calls `listener(key)` on every change. With a key, only on changes to that key and on form-wide changes such as the dirty flag. Returns `{ unsubscribe }`. |
 | `notify(key?)` | Notifies subscribers and re-renders the components that use the context |

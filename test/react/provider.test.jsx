@@ -31,6 +31,11 @@ const text = testId => screen.getByTestId(testId).textContent;
 describe.each(modes)('ValidationProvider in $mode', ({ wrapper }) => {
     const setup = ui => ({ user: userEvent.setup(), ...render(ui, { wrapper }) });
 
+    it('throws a clear error when usePValidation is used outside a ValidationProvider', () => {
+        expect(() => setup(<ProviderField />)).toThrow('usePValidation must be used inside a ValidationProvider.');
+        console.error.mockClear();
+    });
+
     it('shows the form as invalid on the first render', () => {
         setup(
             <ValidationProvider>

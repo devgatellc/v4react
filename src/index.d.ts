@@ -5,6 +5,8 @@ export function validateValue(value: any, rules: ValidationRule[], deps?: any[])
 export function createValidationContext(): ValidationContext;
 export function useValidationContext(): ValidationContext;
 export function useValidationValue<S>(defaultValue: S | (() => S)): ValidationValue<S>;
+export function useValidation<S>(defaultValue: Extract<S, null | undefined>, rules: ValidationRule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
+    [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 export function useValidation<S>(defaultValue: ValidationValue<S>, rules: ValidationRule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
     [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 export function useValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], context: ValidationContext, deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
@@ -12,6 +14,8 @@ export function useValidation<S>(defaultValue: S | (() => S), rules: ValidationR
 
 export function ValidationProvider(props: { children?: React.ReactNode; [prop: string]: any }): React.ReactElement;
 export function usePValidationContext(): ValidationContext;
+export function usePValidation<S>(defaultValue: Extract<S, null | undefined>, rules: ValidationRule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
+    [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 export function usePValidation<S>(defaultValue: ValidationValue<S>, rules: ValidationRule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
     [S, (val: S | ((prevState: S) => S)) => void, ValidationControl<S>, () => void];
 export function usePValidation<S>(defaultValue: S | (() => S), rules: ValidationRule[], deps?: any[] | boolean | ((val: S) => boolean), enabled?: boolean | ((val: S) => boolean)):
@@ -38,7 +42,7 @@ export interface ValidationContext {
     readonly dirty: boolean;
     setDirty: () => ValidationContext;
     setPristine: () => ValidationContext;
-    addResult: (key: string, results: ValidationResult[]) => ValidationContext;
+    addResult: (key: string, results: ValidationResult[] | null | undefined) => ValidationContext;
     removeResult: (key: string) => ValidationContext;
     on: (key?: string) => { subscribe: (fn: (key: string) => void) => ValidationSubscription };
     notify: (key?: string) => void;
@@ -63,7 +67,7 @@ export interface ValidationValidators {
     minLength: (value: any, length: number) => boolean;
     maxLength: (value: any, length: number) => boolean;
     equals: (value: any, equalValue: any) => boolean;
-    pattern: (value: any, pattern: string | RegExp | { pattern: string, flags?: string }) => boolean;
+    pattern: (value: any, pattern: string | RegExp | { pattern: string, flags?: string } | null | undefined | false) => boolean;
     email: (value: any) => boolean;
     url: (value: any) => boolean;
     [name: string]: ValidationValidator;

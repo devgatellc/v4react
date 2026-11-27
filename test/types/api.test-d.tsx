@@ -84,6 +84,23 @@ describe('useValidation', () => {
         expectTypeOf(pControl).toEqualTypeOf<ValidationControl<string>>();
     });
 
+    test('a null initial value keeps its own type or takes the type argument', () => {
+        const [plain] = useValidation(null, [], ctx);
+        const [date] = useValidation<Date | null>(null, [], ctx);
+        const [pDate] = usePValidation<Date | null>(null, []);
+
+        expectTypeOf(plain).toEqualTypeOf<null>();
+        expectTypeOf(date).toEqualTypeOf<Date | null>();
+        expectTypeOf(pDate).toEqualTypeOf<Date | null>();
+    });
+
+    test('a null initial value is rejected for a non-nullable type argument', () => {
+        // @ts-expect-error
+        useValidation<string>(null, [], ctx);
+        // @ts-expect-error
+        usePValidation<string>(undefined, []);
+    });
+
     test('a plain { value } object is an ordinary initial value', () => {
         const [value] = useValidation({ value: 1 }, [], ctx);
 
@@ -135,6 +152,19 @@ describe('ValidationContext', () => {
         expectTypeOf(ctx.setPristine()).toEqualTypeOf<ValidationContext>();
     });
 
+    test('addResult accepts null or undefined as no errors, and the result of validateValue', () => {
+        expectTypeOf(ctx.addResult('a', null)).toEqualTypeOf<ValidationContext>();
+        expectTypeOf(ctx.addResult('a', undefined)).toEqualTypeOf<ValidationContext>();
+        expectTypeOf(ctx.addResult('a', validateValue('x', ['required']))).toEqualTypeOf<ValidationContext>();
+    });
+
+    test('addResult still requires an array of results', () => {
+        // @ts-expect-error
+        ctx.addResult('a', { name: 'x', message: 'y' });
+        // @ts-expect-error
+        ctx.addResult('a', [{ name: 'x' }]);
+    });
+
     test('getState always has valid and errors', () => {
         const state = ctx.getState('a');
 
@@ -183,8 +213,16 @@ describe('validationConfig', () => {
     test('built-in validators keep their own signatures', () => {
         expectTypeOf(validationConfig.validators.required).toEqualTypeOf<(value: any) => boolean>();
         expectTypeOf(validationConfig.validators.minLength).parameter(1).toEqualTypeOf<number>();
-        expectTypeOf(validationConfig.validators.pattern).parameter(1).toEqualTypeOf<string | RegExp | { pattern: string, flags?: string }>();
+        expectTypeOf(validationConfig.validators.pattern).parameter(1).toEqualTypeOf<string | RegExp | { pattern: string, flags?: string } | null | undefined | false>();
         expectTypeOf(validationConfig.converts.trim).returns.toEqualTypeOf<string>();
+    });
+
+    test('pattern accepts a conditional pattern that is turned off', () => {
+        const isUk = Math.random() > 0.5;
+
+        expectTypeOf(validationConfig.validators.pattern).toBeCallableWith('AB123456', isUk && '^[A-Z]{2}\\d{6}$');
+        expectTypeOf(validationConfig.validators.pattern).toBeCallableWith('abc', isUk && /^[a-z]+$/);
+        expectTypeOf(validationConfig.validators.pattern).toBeCallableWith('abc', null);
     });
 
     test('custom validators and converts are typed', () => {

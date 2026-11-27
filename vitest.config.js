@@ -15,6 +15,18 @@ const reactProject = (major, resolve) => ({
     },
 });
 
+const typesProject = (name, dir) => ({
+    test: {
+        name,
+        typecheck: {
+            enabled: true,
+            only: true,
+            include: [`${dir}/**/*.test-d.{ts,tsx}`],
+            tsconfig: `${dir}/tsconfig.json`,
+        },
+    },
+});
+
 export default defineConfig({
     test: {
         projects: [
@@ -33,17 +45,8 @@ export default defineConfig({
                     { find: /^@testing-library\/(react|dom|user-event)$/, replacement: `${react18Modules}@testing-library/$1` },
                 ],
             }),
-            {
-                test: {
-                    name: 'types',
-                    typecheck: {
-                        enabled: true,
-                        only: true,
-                        include: ['test/types/**/*.test-d.tsx'],
-                        tsconfig: 'test/types/tsconfig.json',
-                    },
-                },
-            },
+            typesProject('types', 'test/types'),
+            typesProject('types-loose', 'test/types-loose'),
         ],
         coverage: {
             provider: 'v8',

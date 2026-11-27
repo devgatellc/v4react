@@ -35,6 +35,13 @@ describe('validateValue', () => {
         expect(validateValue('', ['doesNotExist', { name: 'alsoMissing' }])).toBeNull();
     });
 
+    it('treats NaN, such as a cleared number input, as empty', () => {
+        const rules = ['integer', { name: 'min', value: 1 }, { name: 'max', value: 10 }];
+
+        expect(validateValue(NaN, rules)).toBeNull();
+        expect(validateValue(NaN, ['required', ...rules])).toEqual([error('required')]);
+    });
+
     it('passes the rule value to the validator', () => {
         expect(validateValue(2, [{ name: 'min', value: 3 }])).toEqual([error('min')]);
         expect(validateValue(4, [{ name: 'min', value: 3 }])).toBeNull();
@@ -88,6 +95,11 @@ describe('validateValue', () => {
         it('converts non-string values to strings', () => {
             expect(validateValue(5, [{ name: 'equals', value: '5', convert: 'trim' }])).toBeNull();
             expect(() => validateValue(null, [{ name: 'required', convert: 'trim' }])).not.toThrow();
+        });
+
+        it.each(['trim', 'upper', 'lower'])('%s keeps NaN, such as a cleared number input, empty', convert => {
+            expect(validateValue(NaN, [{ name: 'required', convert }])).toEqual([error('required')]);
+            expect(validateValue(NaN, [{ name: 'min', value: 1, convert }])).toBeNull();
         });
 
         it('keeps the converted value for the rules after it', () => {
