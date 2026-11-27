@@ -51,13 +51,13 @@ let globalValidators = {
     },
 
     minLength: function (value, length) {
-        if (!value) return true;
-        return value.length >= length;
+        if (isEmpty(value)) return true;
+        return typeof value.length === 'number' && value.length >= length;
     },
 
     maxLength: function (value, length) {
-        if (!value) return true;
-        return value.length <= length;
+        if (isEmpty(value)) return true;
+        return typeof value.length === 'number' && value.length <= length;
     },
 
     equals: function (value, equalValue) {

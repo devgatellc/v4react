@@ -193,6 +193,11 @@ describe('minLength and maxLength', () => {
         expect(validators.minLength(value, 3)).toBe(true);
         expect(validators.maxLength(value, 3)).toBe(true);
     });
+
+    it.each([false, true, 0, 5, {}])('both fail for %o, which has no length', value => {
+        expect(validators.minLength(value, 0)).toBe(false);
+        expect(validators.maxLength(value, 3)).toBe(false);
+    });
 });
 
 describe('equals', () => {
